@@ -10,3 +10,4 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::resource('/sentences', SentenceController::class);
+Route::post('/sentences/upload', [SentenceController::class, 'upload']);
