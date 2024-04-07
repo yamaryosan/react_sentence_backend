@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
+use App\Models\Sentence;
+
 class SentenceController extends Controller
 {
     /**
@@ -11,7 +13,7 @@ class SentenceController extends Controller
      */
     public function index()
     {
-        //
+        return Sentence::all();
     }
 
     /**
@@ -19,7 +21,10 @@ class SentenceController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $sentence = new Sentence();
+        $sentence->sentence = $request->sentence;
+        $sentence->save();
+        return $sentence;
     }
 
     /**
@@ -27,7 +32,7 @@ class SentenceController extends Controller
      */
     public function show(string $id)
     {
-        //
+        return Sentence::find($id);
     }
 
     /**
@@ -35,7 +40,10 @@ class SentenceController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $sentence = Sentence::find($id);
+        $sentence->sentence = $request->sentence;
+        $sentence->save();
+        return $sentence;
     }
 
     /**
@@ -43,6 +51,8 @@ class SentenceController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $sentence = Sentence::find($id);
+        $sentence->delete();
+        return $sentence;
     }
 }
