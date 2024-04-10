@@ -10,4 +10,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::resource('/sentences', SentenceController::class);
+// 文章アップロード用ルート
 Route::post('/sentences/upload', [SentenceController::class, 'upload']);
+// 記事アップロード用ルート
+Route::post('/articles/upload', [ArticleController::class, 'upload']);
