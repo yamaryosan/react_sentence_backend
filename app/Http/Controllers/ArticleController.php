@@ -58,7 +58,6 @@ class ArticleController extends Controller
         return $article;
     }
 
-=======
     /**
      * 記事を全削除する
      */
