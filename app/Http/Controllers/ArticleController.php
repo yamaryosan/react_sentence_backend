@@ -58,6 +58,7 @@ class ArticleController extends Controller
         return $article;
     }
 
+=======
     /**
      * 記事を全削除する
      */
@@ -65,9 +66,9 @@ class ArticleController extends Controller
     {
         Article::truncate();
         if (Article::all()->isEmpty()) {
-            return response()->json(['message' => '全削除しました']);
+            return response()->json(['message' => '全ての記事を削除しました']);
         } else {
-            return response()->json(['message' => '削除に失敗しました'], 500);
+            return response()->json(['message' => '記事の削除に失敗しました'], 500);
         }
     }
 
