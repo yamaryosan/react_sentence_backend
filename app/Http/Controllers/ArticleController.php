@@ -58,6 +58,19 @@ class ArticleController extends Controller
         return $article;
     }
 
+    /**
+     * 記事を全削除する
+     */
+    public function truncate()
+    {
+        Article::truncate();
+        if (Article::all()->isEmpty()) {
+            return response()->json(['message' => '全削除しました']);
+        } else {
+            return response()->json(['message' => '削除に失敗しました'], 500);
+        }
+    }
+
     public function upload(Request $request)
     {
         // テキストファイルのみ受け付ける
