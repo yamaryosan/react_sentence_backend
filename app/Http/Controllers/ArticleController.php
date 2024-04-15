@@ -139,4 +139,15 @@ class ArticleController extends Controller
         }
         return '';
     }
+
+    /**
+     * 検索
+     */
+    public function search(Request $request)
+    {
+        $keyword = $request->keyword;
+        $articles = $articles->merge(Article::where('title', 'like', "%$keyword%")->get());
+        $articles = Article::where('content', 'like', "%$keyword%")->get();
+        return $articles;
+    }
 }
