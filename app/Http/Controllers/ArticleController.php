@@ -8,6 +8,7 @@ use App\Models\Article;
 
 class ArticleController extends Controller
 {
+    const SECRET_KEYWORD = 'magic';
     /**
      * Display a listing of the resource.
      */
@@ -146,8 +147,31 @@ class ArticleController extends Controller
     public function search(Request $request)
     {
         $keyword = $request->keyword;
+        if ($this->verify($keyword)) {
+            return response()->json(
+                [
+                    [
+                        "id"=> 1,
+                        "title"=> "title",
+                    ],
+                    "isVerified" => "true"
+                ]
+            );
+        }
         $articles = Article::where('title', 'like', "%$keyword%")->get();
         $articles = $articles->merge(Article::where('content', 'like', "%$keyword%")->get());
-        return $articles;
+        return response()->json(['articles' => $articles]);
+    }
+
+    /**
+     * 秘密のキーワードが入力されたかどうかをチェックする
+     */
+    private function verify(string $keyword)
+    {
+        if ($keyword === self::SECRET_KEYWORD) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
