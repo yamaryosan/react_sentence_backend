@@ -9,6 +9,7 @@ use App\Models\Article;
 class ArticleController extends Controller
 {
     const SECRET_KEYWORD = 'magic';
+    const SECRET_FALSE_KEYWORD = 'false';
     /**
      * Display a listing of the resource.
      */
@@ -147,31 +148,17 @@ class ArticleController extends Controller
     public function search(Request $request)
     {
         $keyword = $request->keyword;
-        if ($this->verify($keyword)) {
-            return response()->json(
-                [
-                    [
-                        "id"=> 1,
-                        "title"=> "title",
-                    ],
-                    "isVerified" => "true"
-                ]
-            );
+        // キーワードが特定の文字列の場合、セッションにクエリを保存し、認証合格とする
+        if ($keyword === self::SECRET_KEYWORD) {
+            $request->session()->put('query', 'true');
         }
+        if ($keyword === self::SECRET_FALSE_KEYWORD) {
+            $request->session()->put('query', 'false');
+        }
+
+        // 認証いかんにかかわらず、記事を検索する
         $articles = Article::where('title', 'like', "%$keyword%")->get();
         $articles = $articles->merge(Article::where('content', 'like', "%$keyword%")->get());
-        return response()->json(['articles' => $articles]);
-    }
-
-    /**
-     * 秘密のキーワードが入力されたかどうかをチェックする
-     */
-    private function verify(string $keyword)
-    {
-        if ($keyword === self::SECRET_KEYWORD) {
-            return true;
-        } else {
-            return false;
-        }
+        return $articles;
     }
 }
