@@ -6,8 +6,11 @@ use Illuminate\Http\Request;
 
 use App\Models\Sentence;
 
+use Illuminate\Support\Facades\Validator;
+
 class SentenceController extends Controller
 {
+    const SECRET_FALSE_KEYWORD = 'false'; // 認証解除用のキーワード
     /**
      * Display a listing of the resource.
      */
@@ -105,5 +108,20 @@ class SentenceController extends Controller
             $result[] = $sentence;
         }
         return $result;
+    }
+
+    /**
+     * 検索
+     */
+    public function search(Request $request)
+    {
+        $keyword = $request->keyword;
+        if ($keyword === self::SECRET_FALSE_KEYWORD) {
+            $request->session()->put('query', 'false');
+        }
+
+        // 認証いかんにかかわらず、記事を検索する
+        $sentences = Sentence::where('sentence', 'like', "%$keyword%")->get();
+        return $sentences;
     }
 }
