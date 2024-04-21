@@ -58,10 +58,14 @@ class SentenceController extends Controller
 
     public function upload(Request $request)
     {
-        // テキストファイルのみ受け付ける
-        $request->validate([
-            'file' => 'required|mimes:txt'
+        // ファイルアップロードのバリデーション
+        $validator = Validator::make($request->all(), [
+            'file' => 'required|max:20480'
         ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
+        }
 
         $file = $request->file('file');
         $file->move(storage_path('app/uploads'), $file->getClientOriginalName());
