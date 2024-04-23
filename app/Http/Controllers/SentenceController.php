@@ -6,8 +6,11 @@ use Illuminate\Http\Request;
 
 use App\Models\Sentence;
 
+use Illuminate\Support\Facades\Validator;
+
 class SentenceController extends Controller
 {
+    const SECRET_FALSE_KEYWORD = 'false'; // 認証解除用のキーワード
     /**
      * Display a listing of the resource.
      */
@@ -58,10 +61,14 @@ class SentenceController extends Controller
 
     public function upload(Request $request)
     {
-        // テキストファイルのみ受け付ける
-        $request->validate([
-            'file' => 'required|mimes:txt'
+        // ファイルアップロードのバリデーション
+        $validator = Validator::make($request->all(), [
+            'file' => 'required|max:20480'
         ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
+        }
 
         $file = $request->file('file');
         $file->move(storage_path('app/uploads'), $file->getClientOriginalName());
@@ -101,5 +108,20 @@ class SentenceController extends Controller
             $result[] = $sentence;
         }
         return $result;
+    }
+
+    /**
+     * 検索
+     */
+    public function search(Request $request)
+    {
+        $keyword = $request->keyword;
+        if ($keyword === self::SECRET_FALSE_KEYWORD) {
+            $request->session()->put('query', 'false');
+        }
+
+        // 認証いかんにかかわらず、記事を検索する
+        $sentences = Sentence::where('sentence', 'like', "%$keyword%")->get();
+        return $sentences;
     }
 }
