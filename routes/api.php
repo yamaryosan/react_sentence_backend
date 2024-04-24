@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\SentenceController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AdminController;
@@ -10,6 +11,9 @@ use App\Http\Controllers\AdminController;
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+// ホーム画面用ルート
+Route::get('/home', [HomePageController::class, 'index']);
 
 // 文章アップロード用ルート
 Route::post('/sentences/upload', [SentenceController::class, 'upload']);
