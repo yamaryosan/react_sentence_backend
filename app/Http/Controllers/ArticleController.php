@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 use App\Models\Article;
 
@@ -75,10 +76,14 @@ class ArticleController extends Controller
 
     public function upload(Request $request)
     {
-        // テキストファイルのみ受け付ける
-        $request->validate([
-            'file' => 'required|mimes:txt',
+        // ファイルアップロードのバリデーション
+        $validator = Validator::make($request->all(), [
+            'file' => 'required|max:20480'
         ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
+        }
 
         $file = $request->file('file');
         $file->move(storage_path('app/uploads'), $file->getClientOriginalName());
@@ -135,9 +140,9 @@ class ArticleController extends Controller
      */
     private function getContent(string $article)
     {
-        $pattern = '/【本文】(\n+)(.+)/u';
+        $pattern = '/【本文】\s*(.*)/s';
         if (preg_match($pattern, $article, $matches)) {
-            return $matches[2];
+            return $matches[1];
         }
         return '';
     }
