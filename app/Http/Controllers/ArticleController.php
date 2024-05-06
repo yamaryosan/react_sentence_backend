@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
+use Illuminate\Support\Facades\Storage;
+
 use App\Models\Article;
+use App\Models\ArticleImage;
 
 class ArticleController extends Controller
 {
@@ -16,7 +19,13 @@ class ArticleController extends Controller
      */
     public function index()
     {
-        return Article::all();
+        // 記事の一覧を取得する
+        $articles = Article::all();
+        // 記事の連想配列に画像のパスを追加する
+        foreach ($articles as $article) {
+            $article->imagePaths = [$this->getImagePaths($article->id)];
+        }
+        return $articles;
     }
 
     /**
@@ -36,7 +45,9 @@ class ArticleController extends Controller
      */
     public function show(string $id)
     {
-        return Article::find($id);
+        $article = Article::find($id);
+        $article->imagePaths = [$this->getImagePaths($id)];
+        return $article;
     }
 
     /**
@@ -165,5 +176,22 @@ class ArticleController extends Controller
         $articles = Article::where('title', 'like', "%$keyword%")->get();
         $articles = $articles->merge(Article::where('content', 'like', "%$keyword%")->get());
         return $articles;
+    }
+
+    /**
+     * 記事IDに該当する画像のパスを取得
+     * 該当する記事がない場合はデフォルトの画像を返す
+     */
+    public function getImagePaths(string $articleId)
+    {
+        $defaultImagePath = Storage::disk('public')->url('noimage.png');
+
+        // 記事IDに該当する画像のパス群を返す
+        $images = ArticleImage::where('article_id', $articleId)->get();
+        if ($images->isNotEmpty()) {
+            return $images;
+        } else {
+            return $defaultImagePath;
+        }
     }
 }
