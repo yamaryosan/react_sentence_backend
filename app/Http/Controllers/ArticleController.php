@@ -110,8 +110,11 @@ class ArticleController extends Controller
             $filename = $file->getClientOriginalName();
             $title = str_replace('.md', '', $filename);
 
-            // linesは配列なので文字列に変換
-            $content = implode($lines);
+            // 各行に対して画像のパスを変換
+            $convertedLines = $this->convertImagePath($lines);
+
+            // 文字列に変換
+            $content = implode($convertedLines);
 
             // 記事を保存
             $new_article = new Article();
@@ -140,6 +143,28 @@ class ArticleController extends Controller
         $articles = Article::where('title', 'like', "%$keyword%")->get();
         $articles = $articles->merge(Article::where('content', 'like', "%$keyword%")->get());
         return $articles;
+    }
+
+    /**
+     * ../_resources形式の画像のパスを変換し、/images/xxx.pngの形式にする関数
+     * フロントエンドで画像を表示するために使用
+     * ![text](../_resources/example.png) -> ![example](/images/example.png)
+     */
+    public function convertImagePath(array $lines)
+    {
+        $convertImagePath = function ($line) {
+            // preg_replace_callbackは、正規表現にマッチした文字列をコールバック関数で置換する関数
+            return preg_replace_callback('/!\[.*?\]\((.*?)\)/', function ($matches) {
+                $imagePath = $matches[1]; // 画像のパス(../_resources/example.png)
+                if (strpos($imagePath, '../_resources/') === 0) {
+                    $fileImagePath = Storage::disk('public')->url('/images/' . basename($imagePath));
+                    return '![' . basename($imagePath) . '](' . $fileImagePath . ')';
+                }
+                return $matches[0]; // 画像のパスが変換対象でない場合はそのまま返す
+            }, $line);
+        };
+
+        return array_map($convertImagePath, $lines);
     }
 
     /**
