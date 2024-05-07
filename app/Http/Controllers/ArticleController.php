@@ -99,63 +99,21 @@ class ArticleController extends Controller
         $file = $request->file('file');
         $file->move(storage_path('app/uploads'), $file->getClientOriginalName());
         $lines = file(storage_path('app/uploads/' . $file->getClientOriginalName()));
-        $line = implode("", $lines);
 
-        $articles = $this->split($line);
+        // ファイル名からタイトルを取得
+        $filename = $file->getClientOriginalName();
+        $title = str_replace('.md', '', $filename);
 
-        // 記事を保存する
-        foreach ($articles as $article) {
-            $new_article = new Article();
-            $new_article->title = $this->getTitle($article);
-            $new_article->content = $this->getContent($article);
-            $new_article->save();
-        }
+        // linesは配列なので文字列に変換
+        $content = implode($lines);
+
+        // 記事を保存
+        $new_article = new Article();
+        $new_article->title = $title;
+        $new_article->content = $content;
+        $new_article->save();
 
         return Article::all();
-    }
-
-    /**
-     * テキストファイルの内容を記事ごとに分割する
-     * ファイルは「【タイトル】〜〜〜【本文】〜〜〜【タイトル】〜〜〜【本文】〜〜〜」の形式で保存されている
-     * これを「【タイトル】〜〜〜【本文】」ごとに分割する
-     */
-    private function split(string $line)
-    {
-        $articles = [];
-        $pattern = '/(【タイトル】[^【]+【本文】[^【]+)/u';
-        if (preg_match_all($pattern, $line, $matches)) {
-            $articles = $matches[0];
-            // 文字列の最後に改行がある場合、削除する
-            $articles = array_map(function ($article) {
-                return rtrim($article);
-            }, $articles);
-        }
-        return $articles;
-    }
-
-    /**
-     * 記事からタイトルを取得する
-     * 【タイトル】の後に続く文字列を取得する
-     */
-    private function getTitle(string $article)
-    {
-        $pattern = '/【タイトル】(\n+)(.+)/u';
-        if (preg_match($pattern, $article, $matches)) {
-            return $matches[2];
-        }
-        return '';
-    }
-
-    /**
-     * 記事から本文を取得する
-     */
-    private function getContent(string $article)
-    {
-        $pattern = '/【本文】\s*(.*)/s';
-        if (preg_match($pattern, $article, $matches)) {
-            return $matches[1];
-        }
-        return '';
     }
 
     /**
