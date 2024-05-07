@@ -89,30 +89,36 @@ class ArticleController extends Controller
     {
         // ファイルアップロードのバリデーション
         $validator = Validator::make($request->all(), [
-            'file' => 'required|max:20480'
+            'files.*' => 'required|max:20480'
         ]);
 
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 400);
         }
 
-        $file = $request->file('file');
-        $file->move(storage_path('app/uploads'), $file->getClientOriginalName());
-        $lines = file(storage_path('app/uploads/' . $file->getClientOriginalName()));
+        $files = $request->file('files');
 
-        // ファイル名からタイトルを取得
-        $filename = $file->getClientOriginalName();
-        $title = str_replace('.md', '', $filename);
+        if (empty($files)) {
+            return response()->json(['error' => 'ファイルが選択されていません'], 400);
+        }
 
-        // linesは配列なので文字列に変換
-        $content = implode($lines);
+        foreach ($files as $file) {
+            $file->move(storage_path('app/uploads'), $file->getClientOriginalName());
+            $lines = file(storage_path('app/uploads/' . $file->getClientOriginalName()));
 
-        // 記事を保存
-        $new_article = new Article();
-        $new_article->title = $title;
-        $new_article->content = $content;
-        $new_article->save();
+            // ファイル名からタイトルを取得
+            $filename = $file->getClientOriginalName();
+            $title = str_replace('.md', '', $filename);
 
+            // linesは配列なので文字列に変換
+            $content = implode($lines);
+
+            // 記事を保存
+            $new_article = new Article();
+            $new_article->title = $title;
+            $new_article->content = $content;
+            $new_article->save();
+        }
         return Article::all();
     }
 
