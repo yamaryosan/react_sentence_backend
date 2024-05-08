@@ -7,6 +7,7 @@ use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\SentenceController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ArticleImageController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -27,3 +28,6 @@ Route::post('/articles/upload', [ArticleController::class, 'upload']);
 Route::delete('/articles/deleteAll', [ArticleController::class, 'truncate']);
 // 記事用ルート
 Route::resource('/articles', ArticleController::class);
+
+// 記事画像アップロード用ルート
+Route::post('/articleImages/upload', [ArticleImageController::class, 'upload']);
