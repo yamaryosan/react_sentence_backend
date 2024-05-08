@@ -31,3 +31,4 @@ Route::resource('/articles', ArticleController::class);
 
 // 記事画像アップロード用ルート
 Route::post('/articleImages/upload', [ArticleImageController::class, 'upload']);
+Route::delete('/articleImages/deleteAll', [ArticleImageController::class, 'truncate']);
