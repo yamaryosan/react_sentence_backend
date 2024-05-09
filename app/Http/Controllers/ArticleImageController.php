@@ -13,7 +13,7 @@ class ArticleImageController extends Controller
             // 重複する画像がある場合は上書きする
             $image->move(storage_path('app/public/images'), $image->getClientOriginalName());
         }
-    return response()->json(['message' => '画像をアップロードしました']);
+        return response()->json(['message' => '画像をアップロードしました']);
     }
 
     /**
