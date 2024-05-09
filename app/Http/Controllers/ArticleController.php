@@ -23,7 +23,7 @@ class ArticleController extends Controller
         $articles = Article::all();
         // 記事の連想配列に画像のパスを追加する
         foreach ($articles as $article) {
-            $article->imagePaths = [$this->getImagePaths($article->id)];
+            $article->imagePaths = $this->getImagePaths($article->id);
         }
         return $articles;
     }
@@ -46,7 +46,7 @@ class ArticleController extends Controller
     public function show(string $id)
     {
         $article = Article::find($id);
-        $article->imagePaths = [$this->getImagePaths($id)];
+        $article->imagePaths = $this->getImagePaths($id);
         return $article;
     }
 
@@ -77,7 +77,8 @@ class ArticleController extends Controller
      */
     public function truncate()
     {
-        Article::truncate();
+        // truncateだと外部キー制約がある場合エラーになるので、全削除する
+        Article::query()->delete();
         if (Article::all()->isEmpty()) {
             return response()->json(['message' => '全ての記事を削除しました']);
         } else {
@@ -116,11 +117,29 @@ class ArticleController extends Controller
             // 文字列に変換
             $content = implode($convertedLines);
 
+            // 画像のパスを取得
+            $imagePaths = [];
+            foreach ($convertedLines as $line) {
+                preg_match_all('/!\[.*?\]\((.*?)\)/', $line, $matches);
+                foreach ($matches[1] as $match) {
+                    $imagePaths[] = $match;
+                }
+            }
+
             // 記事を保存
             $new_article = new Article();
             $new_article->title = $title;
             $new_article->content = $content;
             $new_article->save();
+
+            // 画像を保存
+            foreach ($imagePaths as $imagePath) {
+                $articleImage = new ArticleImage();
+                $articleImage->name = basename($imagePath);
+                $articleImage->path = $imagePath;
+                $articleImage->article_id = $new_article->id;
+                $articleImage->save();
+            }
         }
         return Article::all();
     }
@@ -168,16 +187,16 @@ class ArticleController extends Controller
     }
 
     /**
-     * 記事IDに該当する画像のパスを取得
+     * 記事IDに該当する画像のパス群を取得
      * 該当する記事がない場合はデフォルトの画像を返す
      */
-    public function getImagePaths(string $articleId)
+    public function getImagePaths(string $articleId): array
     {
-        $defaultImagePath = Storage::disk('public')->url('noimage.png');
+        $defaultImagePath = [Storage::disk('public')->url('noimage.png')];
 
-        // 記事IDに該当する画像のパス群を返す
-        $images = ArticleImage::where('article_id', $articleId)->get();
-        if ($images->isNotEmpty()) {
+        // 記事IDに該当する画像のパス群を返す (該当する記事がない場合はデフォルトの画像を返す)
+        $images = ArticleImage::where('article_id', $articleId)->get()->pluck('path')->toArray();
+        if (count($images) > 0) {
             return $images;
         } else {
             return $defaultImagePath;
