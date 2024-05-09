@@ -23,7 +23,7 @@ class ArticleController extends Controller
         $articles = Article::all();
         // 記事の連想配列に画像のパスを追加する
         foreach ($articles as $article) {
-            $article->imagePaths = [$this->getImagePaths($article->id)];
+            $article->imagePaths = $this->getImagePaths($article->id);
         }
         return $articles;
     }
@@ -46,7 +46,7 @@ class ArticleController extends Controller
     public function show(string $id)
     {
         $article = Article::find($id);
-        $article->imagePaths = [$this->getImagePaths($id)];
+        $article->imagePaths = $this->getImagePaths($id);
         return $article;
     }
 
@@ -77,7 +77,8 @@ class ArticleController extends Controller
      */
     public function truncate()
     {
-        Article::truncate();
+        // truncateだと外部キー制約がある場合エラーになるので、全削除する
+        Article::query()->delete();
         if (Article::all()->isEmpty()) {
             return response()->json(['message' => '全ての記事を削除しました']);
         } else {
@@ -89,73 +90,58 @@ class ArticleController extends Controller
     {
         // ファイルアップロードのバリデーション
         $validator = Validator::make($request->all(), [
-            'file' => 'required|max:20480'
+            'files.*' => 'required|max:20480'
         ]);
 
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 400);
         }
 
-        $file = $request->file('file');
-        $file->move(storage_path('app/uploads'), $file->getClientOriginalName());
-        $lines = file(storage_path('app/uploads/' . $file->getClientOriginalName()));
-        $line = implode("", $lines);
+        $files = $request->file('files');
 
-        $articles = $this->split($line);
+        if (empty($files)) {
+            return response()->json(['error' => 'ファイルが選択されていません'], 400);
+        }
 
-        // 記事を保存する
-        foreach ($articles as $article) {
+        foreach ($files as $file) {
+            $file->move(storage_path('app/uploads'), $file->getClientOriginalName());
+            $lines = file(storage_path('app/uploads/' . $file->getClientOriginalName()));
+
+            // ファイル名からタイトルを取得
+            $filename = $file->getClientOriginalName();
+            $title = str_replace('.md', '', $filename);
+
+            // 各行に対して画像のパスを変換
+            $convertedLines = $this->convertImagePath($lines);
+
+            // 文字列に変換
+            $content = implode($convertedLines);
+
+            // 画像のパスを取得
+            $imagePaths = [];
+            foreach ($convertedLines as $line) {
+                preg_match_all('/!\[.*?\]\((.*?)\)/', $line, $matches);
+                foreach ($matches[1] as $match) {
+                    $imagePaths[] = $match;
+                }
+            }
+
+            // 記事を保存
             $new_article = new Article();
-            $new_article->title = $this->getTitle($article);
-            $new_article->content = $this->getContent($article);
+            $new_article->title = $title;
+            $new_article->content = $content;
             $new_article->save();
-        }
 
+            // 画像を保存
+            foreach ($imagePaths as $imagePath) {
+                $articleImage = new ArticleImage();
+                $articleImage->name = basename($imagePath);
+                $articleImage->path = $imagePath;
+                $articleImage->article_id = $new_article->id;
+                $articleImage->save();
+            }
+        }
         return Article::all();
-    }
-
-    /**
-     * テキストファイルの内容を記事ごとに分割する
-     * ファイルは「【タイトル】〜〜〜【本文】〜〜〜【タイトル】〜〜〜【本文】〜〜〜」の形式で保存されている
-     * これを「【タイトル】〜〜〜【本文】」ごとに分割する
-     */
-    private function split(string $line)
-    {
-        $articles = [];
-        $pattern = '/(【タイトル】[^【]+【本文】[^【]+)/u';
-        if (preg_match_all($pattern, $line, $matches)) {
-            $articles = $matches[0];
-            // 文字列の最後に改行がある場合、削除する
-            $articles = array_map(function ($article) {
-                return rtrim($article);
-            }, $articles);
-        }
-        return $articles;
-    }
-
-    /**
-     * 記事からタイトルを取得する
-     * 【タイトル】の後に続く文字列を取得する
-     */
-    private function getTitle(string $article)
-    {
-        $pattern = '/【タイトル】(\n+)(.+)/u';
-        if (preg_match($pattern, $article, $matches)) {
-            return $matches[2];
-        }
-        return '';
-    }
-
-    /**
-     * 記事から本文を取得する
-     */
-    private function getContent(string $article)
-    {
-        $pattern = '/【本文】\s*(.*)/s';
-        if (preg_match($pattern, $article, $matches)) {
-            return $matches[1];
-        }
-        return '';
     }
 
     /**
@@ -179,16 +165,38 @@ class ArticleController extends Controller
     }
 
     /**
-     * 記事IDに該当する画像のパスを取得
+     * ../_resources形式の画像のパスを変換し、/images/xxx.pngの形式にする関数
+     * フロントエンドで画像を表示するために使用
+     * ![text](../_resources/example.png) -> ![example](/images/example.png)
+     */
+    public function convertImagePath(array $lines)
+    {
+        $convertImagePath = function ($line) {
+            // preg_replace_callbackは、正規表現にマッチした文字列をコールバック関数で置換する関数
+            return preg_replace_callback('/!\[.*?\]\((.*?)\)/', function ($matches) {
+                $imagePath = $matches[1]; // 画像のパス(../_resources/example.png)
+                if (strpos($imagePath, '../_resources/') === 0) {
+                    $fileImagePath = Storage::disk('public')->url('/images/' . basename($imagePath));
+                    return '![' . basename($imagePath) . '](' . $fileImagePath . ')';
+                }
+                return $matches[0]; // 画像のパスが変換対象でない場合はそのまま返す
+            }, $line);
+        };
+
+        return array_map($convertImagePath, $lines);
+    }
+
+    /**
+     * 記事IDに該当する画像のパス群を取得
      * 該当する記事がない場合はデフォルトの画像を返す
      */
-    public function getImagePaths(string $articleId)
+    public function getImagePaths(string $articleId): array
     {
-        $defaultImagePath = Storage::disk('public')->url('noimage.png');
+        $defaultImagePath = [Storage::disk('public')->url('noimage.png')];
 
-        // 記事IDに該当する画像のパス群を返す
-        $images = ArticleImage::where('article_id', $articleId)->get();
-        if ($images->isNotEmpty()) {
+        // 記事IDに該当する画像のパス群を返す (該当する記事がない場合はデフォルトの画像を返す)
+        $images = ArticleImage::where('article_id', $articleId)->get()->pluck('path')->toArray();
+        if (count($images) > 0) {
             return $images;
         } else {
             return $defaultImagePath;
