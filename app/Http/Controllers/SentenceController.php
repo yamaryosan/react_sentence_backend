@@ -120,8 +120,26 @@ class SentenceController extends Controller
             $request->session()->put('query', 'false');
         }
 
+        // NGワードが含まれている場合は、検索しない
+        $ngWords = explode(',', env('NG_WORDS'));
+        if (in_array($keyword, $ngWords)) {
+            return [];
+        }
+
         // 認証いかんにかかわらず、記事を検索する
         $sentences = Sentence::where('sentence', 'like', "%$keyword%")->get();
+
+        // 検索結果からNGワードを含む文章を除外
+        $sentences = $sentences->filter(function ($sentence) {
+            $ngWords = explode(',', env('NG_WORDS'));
+            foreach ($ngWords as $ngWord) {
+                if (strpos($sentence->sentence, $ngWord) !== false) {
+                    return false;
+                }
+            }
+            return true;
+        });
+
         return $sentences;
     }
 }
