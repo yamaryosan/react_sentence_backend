@@ -16,5 +16,6 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
         $this->call(ArticleTableSeeder::class);
         $this->call(ArticleImageTableSeeder::class);
+        $this->call(SentenceTableSeeder::class);
     }
 }

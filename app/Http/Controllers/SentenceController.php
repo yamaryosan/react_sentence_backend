@@ -35,7 +35,11 @@ class SentenceController extends Controller
      */
     public function show(string $id)
     {
-        return Sentence::find($id);
+        $sentence = Sentence::find($id);
+        if ($sentence === null) {
+            return response()->json(['message' => '文章が見つかりません'], 404);
+        }
+        return $sentence;
     }
 
     /**
@@ -59,6 +63,10 @@ class SentenceController extends Controller
         return $sentence;
     }
 
+    /**
+     * 文章アップロード
+     * ファイル拡張子はあえてチェックしない(txtファイルなのに、application/x-dosexecと判定されるファイルがあるため)
+     */
     public function upload(Request $request)
     {
         // ファイルアップロードのバリデーション
