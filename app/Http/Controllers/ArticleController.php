@@ -46,6 +46,9 @@ class ArticleController extends Controller
     public function show(string $id)
     {
         $article = Article::find($id);
+        if (empty($article)) {
+            return response()->json(['message' => '記事が見つかりません'], 404);
+        }
         $article->imagePaths = $this->getImagePaths($id);
         return $article;
     }
@@ -193,6 +196,11 @@ class ArticleController extends Controller
     public function getImagePaths(string $articleId): array
     {
         $defaultImagePath = [Storage::disk('public')->url('noimage.png')];
+
+        // デフォルトの画像がない場合はエラー
+        if (empty($defaultImagePath)) {
+            return response()->json(['message' => 'デフォルトの画像が設定されていません'], 500);
+        }
 
         // 記事IDに該当する画像のパス群を返す (該当する記事がない場合はデフォルトの画像を返す)
         $images = ArticleImage::where('article_id', $articleId)->get()->pluck('path')->toArray();
