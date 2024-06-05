@@ -168,4 +168,63 @@ class SentenceTest extends TestCase
         ]);
         $response->assertStatus(400);
     }
+
+    /**
+     * 文章検索テスト
+     */
+    public function testSearchSentence()
+    {
+        $sentence = new Sentence();
+        $sentence->sentence = 'This is a test sentence.';
+        $sentence->save();
+
+        $response = $this->get('sentences/search?keyword=test');
+
+        $response->assertStatus(200);
+        $response->assertJsonFragment([
+            'sentence' => 'This is a test sentence.'
+        ]);
+    }
+
+    /**
+     * 文章検索テスト（キーワードが空文字）
+     */
+    public function testSearchSentenceWithEmptyKeyword()
+    {
+        $response = $this->get('sentences/search?keyword=');
+
+        $response->assertStatus(200);
+        $response->assertJson([]);
+    }
+
+    /**
+     * 文章検索テスト（キーワードが存在しない）
+     */
+    public function testSearchSentenceWithNoResult()
+    {
+        $sentence = new Sentence();
+        $sentence->sentence = 'This is a test sentence.';
+        $sentence->save();
+
+        $response = $this->get('sentences/search?keyword=notfound');
+
+        $response->assertStatus(200);
+        $response->assertJson([]);
+    }
+
+    /**
+     * 文章検索テスト（NGワードを含む場合、検索結果を表示しない）
+     */
+    public function testSearchSentenceWithNgWord()
+    {
+        $sentence = new Sentence();
+        $oneOfNgWords = explode(',', env('NG_WORDS'))[0];
+        $sentence->sentence = $oneOfNgWords;
+        $sentence->save();
+
+        $response = $this->get('sentences/search?keyword=' . $oneOfNgWords);
+
+        $response->assertStatus(200);
+        $response->assertJson([]);
+    }
 }
