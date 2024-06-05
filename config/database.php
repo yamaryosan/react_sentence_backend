@@ -109,6 +109,15 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
+        'testing' => [
+            'driver' => env('TEST_DB_CONNECTION', 'mysql'),
+            'host' => env('TEST_DB_HOST', 'mysql'),
+            'port' => env('TEST_DB_PORT', '3306'),
+            'database' => env('TEST_DB_DATABASE', 'testing'),
+            'username' => env('TEST_DB_USERNAME'),
+            'password' => env('TEST_DB_PASSWORD'),
+        ],
+
     ],
 
     /*
