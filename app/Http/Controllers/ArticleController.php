@@ -128,6 +128,11 @@ class ArticleController extends Controller
             ];
         }
 
+        // ファイルの拡張子がmdでない場合は配列から削除
+        $filesWithCategories = array_filter($filesWithCategories, function ($fileWithCategory) {
+            return $fileWithCategory['file']->getClientOriginalExtension() === 'md';
+        });
+
         // ファイルをアップロード
         foreach ($filesWithCategories as $fileWithCategory) {
             $file = $fileWithCategory['file'];
