@@ -99,7 +99,7 @@ class ArticleController extends Controller
     {
         // ファイルアップロードのバリデーション
         $validator = Validator::make($request->all(), [
-            'files.*' => 'required|max:20480'
+            'files.*' => 'required|max:2048000'
         ]);
 
         if ($validator->fails()) {
