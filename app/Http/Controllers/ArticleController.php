@@ -80,6 +80,12 @@ class ArticleController extends Controller
      */
     public function truncate()
     {
+        // ファイルの削除
+        $files = glob(storage_path('app/uploads/*'));
+        foreach ($files as $file) {
+            unlink($file);
+        }
+
         // truncateだと外部キー制約がある場合エラーになるので、全削除する
         Article::query()->delete();
         if (Article::all()->isEmpty()) {
@@ -144,7 +150,7 @@ class ArticleController extends Controller
                 $articleImage->save();
             }
         }
-        return Article::all();
+        return response()->json(['message' => 'ファイルをアップロードしました']);
     }
 
     /**
