@@ -99,7 +99,7 @@ class ArticleController extends Controller
     {
         // ファイルアップロードのバリデーション
         $validator = Validator::make($request->all(), [
-            'files.*' => 'required|max:20480'
+            'files.*' => 'required|max:2048000'
         ]);
 
         if ($validator->fails()) {
@@ -107,12 +107,37 @@ class ArticleController extends Controller
         }
 
         $files = $request->file('files');
+        $categories = $request->input('categories');
+
+        // カテゴリが指定されていない場合はエラー
+        if (empty($categories)){
+            return response()->json(['error' => 'カテゴリが選択されていません'], 400);
+        }
 
         if (empty($files)) {
             return response()->json(['error' => 'ファイルが選択されていません'], 400);
         }
 
-        foreach ($files as $file) {
+        // カテゴリーの割り当てに備える
+        $filesWithCategories = [];
+        $filesWithCategories = [];
+        foreach ($files as $index => $file) {
+            $filesWithCategories[] = [
+                'file' => $file,
+                'category' => $categories[$index] // 対応するカテゴリーを割り当てる
+            ];
+        }
+
+        // ファイルの拡張子がmdでない場合は配列から削除
+        $filesWithCategories = array_filter($filesWithCategories, function ($fileWithCategory) {
+            return $fileWithCategory['file']->getClientOriginalExtension() === 'md';
+        });
+
+        // ファイルをアップロード
+        foreach ($filesWithCategories as $fileWithCategory) {
+            $file = $fileWithCategory['file'];
+            $category = $fileWithCategory['category'];
+
             $file->move(storage_path('app/uploads'), $file->getClientOriginalName());
             $lines = file(storage_path('app/uploads/' . $file->getClientOriginalName()));
 
@@ -139,6 +164,7 @@ class ArticleController extends Controller
             $new_article = new Article();
             $new_article->title = $title;
             $new_article->content = $content;
+            $new_article->category = $category;
             $new_article->save();
 
             // 画像を保存
@@ -215,5 +241,20 @@ class ArticleController extends Controller
         } else {
             return $defaultImagePath;
         }
+    }
+
+    /**
+     * 記事のカテゴリーを取得
+     */
+    public function getCategories()
+    {
+        $categoriesObjectArray = Article::select('category')->distinct()->get();
+        // カテゴリーのみを取り出す
+        $categories = [];
+        foreach ($categoriesObjectArray as $category) {
+            $categories[] = $category->category;
+        }
+
+        return $categories;
     }
 }
