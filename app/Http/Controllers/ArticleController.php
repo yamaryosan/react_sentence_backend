@@ -119,10 +119,12 @@ class ArticleController extends Controller
         }
 
         // カテゴリーの割り当てに備える
-        foreach ($files as $file) {
+        $filesWithCategories = [];
+        $filesWithCategories = [];
+        foreach ($files as $index => $file) {
             $filesWithCategories[] = [
                 'file' => $file,
-                'category' => $categories[array_rand($categories)]
+                'category' => $categories[$index] // 対応するカテゴリーを割り当てる
             ];
         }
 
