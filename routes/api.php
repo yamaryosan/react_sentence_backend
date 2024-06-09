@@ -27,6 +27,8 @@ Route::post('/articles/upload', [ArticleController::class, 'upload']);
 
 // 記事全削除用ルート
 Route::delete('/articles/deleteAll', [ArticleController::class, 'truncate']);
+// 記事カテゴリー取得用ルート
+Route::get('/articles/categories', [ArticleController::class, 'getCategories']);
 // 記事用ルート
 Route::resource('/articles', ArticleController::class);
 

@@ -242,4 +242,19 @@ class ArticleController extends Controller
             return $defaultImagePath;
         }
     }
+
+    /**
+     * 記事のカテゴリーを取得
+     */
+    public function getCategories()
+    {
+        $categoriesObjectArray = Article::select('category')->distinct()->get();
+        // カテゴリーのみを取り出す
+        $categories = [];
+        foreach ($categoriesObjectArray as $category) {
+            $categories[] = $category->category;
+        }
+
+        return $categories;
+    }
 }
