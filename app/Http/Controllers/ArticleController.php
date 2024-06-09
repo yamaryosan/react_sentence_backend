@@ -107,12 +107,30 @@ class ArticleController extends Controller
         }
 
         $files = $request->file('files');
+        $categories = $request->input('categories');
+
+        // カテゴリが指定されていない場合はエラー
+        if (empty($categories)){
+            return response()->json(['error' => 'カテゴリが選択されていません'], 400);
+        }
 
         if (empty($files)) {
             return response()->json(['error' => 'ファイルが選択されていません'], 400);
         }
 
+        // カテゴリーの割り当てに備える
         foreach ($files as $file) {
+            $filesWithCategories[] = [
+                'file' => $file,
+                'category' => $categories[array_rand($categories)]
+            ];
+        }
+
+        // ファイルをアップロード
+        foreach ($filesWithCategories as $fileWithCategory) {
+            $file = $fileWithCategory['file'];
+            $category = $fileWithCategory['category'];
+
             $file->move(storage_path('app/uploads'), $file->getClientOriginalName());
             $lines = file(storage_path('app/uploads/' . $file->getClientOriginalName()));
 
@@ -139,6 +157,7 @@ class ArticleController extends Controller
             $new_article = new Article();
             $new_article->title = $title;
             $new_article->content = $content;
+            $new_article->category = $category;
             $new_article->save();
 
             // 画像を保存
