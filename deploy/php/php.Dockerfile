@@ -5,6 +5,7 @@ RUN apt-get update \
     git \
     zip \
     unzip \
+    vim \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
@@ -34,24 +35,24 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 WORKDIR /var/www/html
 # 依存関係をインストール
 RUN composer install --no-interaction --optimize-autoloader --no-dev
-# ストレージディレクトリのパーミッションを変更
-RUN chown -R www-data:www-data /var/www/html/storage
-RUN chmod -R 775 /var/www/html/storage
 # シンボリックリンクを作成
 RUN php artisan storage:link
+# ストレージディレクトリとpublicディレクトリのパーミッションを変更(静的コンテンツアップロード用)
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/storage/app/public /var/www/html/public
+RUN chmod -R 755 /var/www/html/storage /var/www/html/storage/app/public /var/www/html/public
 # アプリケーションキーを生成
 RUN php artisan key:generate --force
 
 # Nodeをインストール(Laravel10では16以上)
-ENV NODE_VERSION=16.16.0
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
-ENV NVM_DIR=/root/.nvm
-RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
-RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
-RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
-ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
-RUN node --version
-RUN npm --version
+# ENV NODE_VERSION=16.16.0
+# RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+# ENV NVM_DIR=/root/.nvm
+# RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
+# RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
+# RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
+# ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
+# RUN node --version
+# RUN npm --version
 
 # psコマンドをインストール
 RUN apt-get update && apt-get install -y procps
