@@ -9,9 +9,18 @@ RUN mkdir -p /var/www/html/docker/nginx/logs
 # アプリケーションの静的ファイルをコピー
 COPY ./public /var/www/html/public
 
+# noimage.pngをコピー
+COPY ./public/noimage.png /var/www/html/public/noimage.png
+
+# Entrypointスクリプトをコピー
+COPY ./deploy/nginx/entrypoint.sh /usr/local/bin/entrypoint.sh
+
+# Entrypointスクリプトに実行権限を付与
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 # ポートを開放
 EXPOSE 80
 EXPOSE 443
 
-# コンテナ起動時にnginxを起動
-CMD ["nginx", "-g", "daemon off;"]
+# Entrypointスクリプトを使用
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

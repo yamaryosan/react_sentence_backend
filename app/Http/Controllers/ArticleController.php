@@ -229,6 +229,11 @@ class ArticleController extends Controller
     {
         $defaultImagePath = [Storage::disk('public')->url('noimage.png')];
 
+        // デフォルトの画像にアクセスできるか確認
+        if (!Storage::disk('public')->exists('noimage.png')) {
+            return response()->json(['message' => 'デフォルトの画像が存在しません'], 500);
+        }
+
         // デフォルトの画像がない場合はエラー
         if (empty($defaultImagePath)) {
             return response()->json(['message' => 'デフォルトの画像が設定されていません'], 500);
