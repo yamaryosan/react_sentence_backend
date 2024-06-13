@@ -176,7 +176,8 @@ class ArticleController extends Controller
                 $articleImage->save();
             }
         }
-        return response()->json(['message' => 'ファイルをアップロードしました']);
+        $count = count($filesWithCategories);
+        return response()->json(['message' => $count . '個のファイルをアップロードしました']);
     }
 
     /**
@@ -256,5 +257,19 @@ class ArticleController extends Controller
         }
 
         return $categories;
+    }
+
+    /**
+     * カテゴリーに該当する記事を取得
+     */
+    public function getArticlesByCategory(Request $request)
+    {
+        $category = $request->category;
+        $articles = Article::where('category', $category)->get();
+        // 記事の連想配列に画像のパスを追加する
+        foreach ($articles as $article) {
+            $article->imagePaths = $this->getImagePaths($article->id);
+        }
+        return $articles;
     }
 }
