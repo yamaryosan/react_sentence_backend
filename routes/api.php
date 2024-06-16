@@ -19,6 +19,8 @@ Route::get('/home', [HomePageController::class, 'index']);
 
 // 文章アップロード用ルート
 Route::post('/sentences/upload', [SentenceController::class, 'upload']);
+// 文章全削除用ルート
+Route::delete('/sentences/deleteAll', [SentenceController::class, 'truncate']);
 // 文章用ルート
 Route::resource('/sentences', SentenceController::class);
 
