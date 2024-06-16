@@ -197,6 +197,12 @@ class ArticleController extends Controller
         // 認証いかんにかかわらず、記事を検索する
         $articles = Article::where('title', 'like', "%$keyword%")->get();
         $articles = $articles->merge(Article::where('content', 'like', "%$keyword%")->get());
+
+        // 記事の連想配列に画像のパスを追加する
+        foreach ($articles as $article) {
+            $article->imagePaths = $this->getImagePaths($article->id);
+        }
+
         return $articles;
     }
 
