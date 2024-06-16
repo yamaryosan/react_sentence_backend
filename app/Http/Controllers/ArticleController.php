@@ -12,8 +12,6 @@ use App\Models\ArticleImage;
 
 class ArticleController extends Controller
 {
-    const SECRET_KEYWORD = 'magic';
-    const SECRET_FALSE_KEYWORD = 'false';
     /**
      * Display a listing of the resource.
      */
@@ -186,15 +184,17 @@ class ArticleController extends Controller
     public function search(Request $request)
     {
         $keyword = $request->keyword;
-        // キーワードが特定の文字列の場合、セッションにクエリを保存し、認証合格とする
-        if ($keyword === self::SECRET_KEYWORD) {
+        // キーワードが特定の文字列の場合、文章の検索を有効化または無効化し、空の配列を返す
+        if ($keyword === env('UNLOCK_KEYWORD')) {
             $request->session()->put('query', 'true');
+            return [];
         }
-        if ($keyword === self::SECRET_FALSE_KEYWORD) {
+        if ($keyword === env('LOCK_KEYWORD')) {
             $request->session()->put('query', 'false');
+            return [];
         }
 
-        // 認証いかんにかかわらず、記事を検索する
+        // キーワードに該当する記事を取得
         $articles = Article::where('title', 'like', "%$keyword%")->get();
         $articles = $articles->merge(Article::where('content', 'like', "%$keyword%")->get());
 
