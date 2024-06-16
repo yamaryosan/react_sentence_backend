@@ -63,6 +63,12 @@ class SentenceController extends Controller
         return $sentence;
     }
 
+    public function truncate()
+    {
+        Sentence::truncate();
+        return ['message' => '全ての文章を削除しました'];
+    }
+
     /**
      * 文章アップロード
      * ファイル拡張子はあえてチェックしない(txtファイルなのに、application/x-dosexecと判定されるファイルがあるため)
