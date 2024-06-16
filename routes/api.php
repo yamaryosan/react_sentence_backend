@@ -31,6 +31,8 @@ Route::delete('/articles/deleteAll', [ArticleController::class, 'truncate']);
 Route::get('/articles/categories/{category}', [ArticleController::class, 'getArticlesByCategory']);
 // 記事カテゴリー取得用ルート
 Route::get('/articles/categories', [ArticleController::class, 'getCategories']);
+// 記事ランダム取得用ルート
+Route::get('/articles/random', [ArticleController::class, 'getRandom']);
 // 記事用ルート
 Route::resource('/articles', ArticleController::class);
 

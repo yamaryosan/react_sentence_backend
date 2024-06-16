@@ -283,4 +283,18 @@ class ArticleController extends Controller
         }
         return $articles;
     }
+
+    /**
+     * 記事をランダムに取得
+     */
+    public function getRandom(Request $request)
+    {
+        $count = 10;
+        $articles = Article::inRandomOrder()->limit($count)->get();
+        // 記事の連想配列に画像のパスを追加する
+        foreach ($articles as $article) {
+            $article->imagePaths = $this->getImagePaths($article->id);
+        }
+        return $articles;
+    }
 }
