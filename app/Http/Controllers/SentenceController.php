@@ -130,8 +130,13 @@ class SentenceController extends Controller
     public function search(Request $request)
     {
         $keyword = $request->keyword;
-        if ($keyword === self::SECRET_FALSE_KEYWORD) {
-            $request->session()->put('query', 'false');
+        // キーワードが特定の文字列の場合、文章の検索を有効化または無効化する
+        if ($keyword === env('LOCK_KEYWORD')) {
+            $request->session()->put('query', 'not_verified');
+            return [];
+        } else if ($keyword === env('UNLOCK_KEYWORD')) {
+            $request->session()->put('query', 'verified');
+            return [];
         }
 
         // NGワードが含まれている場合は、検索しない

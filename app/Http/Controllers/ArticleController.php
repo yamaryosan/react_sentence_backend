@@ -184,13 +184,12 @@ class ArticleController extends Controller
     public function search(Request $request)
     {
         $keyword = $request->keyword;
-        // キーワードが特定の文字列の場合、文章の検索を有効化または無効化し、空の配列を返す
-        if ($keyword === env('UNLOCK_KEYWORD')) {
-            $request->session()->put('query', 'true');
-            return [];
-        }
+        // キーワードが特定の文字列の場合、文章の検索を有効化または無効化する
         if ($keyword === env('LOCK_KEYWORD')) {
-            $request->session()->put('query', 'false');
+            $request->session()->put('query', 'not_verified');
+            return [];
+        } else if ($keyword === env('UNLOCK_KEYWORD')) {
+            $request->session()->put('query', 'verified');
             return [];
         }
 
