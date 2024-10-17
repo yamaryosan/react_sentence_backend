@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Validator;
 
 class SentenceController extends Controller
 {
-    const SECRET_FALSE_KEYWORD = 'false'; // 認証解除用のキーワード
     /**
      * Display a listing of the resource.
      */
@@ -159,6 +158,6 @@ class SentenceController extends Controller
             return true;
         });
 
-        return $sentences;
+        return $sentences->values()->all();
     }
 }
