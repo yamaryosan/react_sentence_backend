@@ -43,37 +43,13 @@ RUN chmod -R 755 /var/www/html/storage /var/www/html/storage/app/public /var/www
 # アプリケーションキーを生成
 RUN php artisan key:generate --force
 
-# Nodeをインストール(Laravel10では16以上)
-# ENV NODE_VERSION=16.16.0
-# RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
-# ENV NVM_DIR=/root/.nvm
-# RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
-# RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
-# RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
-# ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
-# RUN node --version
-# RUN npm --version
-
-# psコマンドをインストール
-RUN apt-get update && apt-get install -y procps
-
-# telnetコマンドをインストール
-RUN apt-get update && apt-get install -y telnet
-
-# mysql-clientをインストール
-RUN apt-get update && apt-get install -y default-mysql-client
-
-# Webサーバを自前でたてる
-# CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=80"]
-
 # エントリーポイントスクリプトをコンテナ内にコピー
 COPY ./deploy/php/entrypoint.sh /usr/local/bin/entrypoint.sh
-
 # エントリーポイントスクリプトに実行権限を付与
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# エントリーポイントを指定
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+EXPOSE 80
 
-EXPOSE 9000
-CMD ["php-fpm"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=80"]
+
