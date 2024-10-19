@@ -3,23 +3,25 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Storage;
 class ArticleImageController extends Controller
 {
+    /**
+     * 画像をS3にアップロードする
+     */
     public function upload(Request $request)
     {
-        $imagesPath = storage_path('app/public/images');
-        // ディレクトリが存在しない場合は作成する
-        if (!file_exists($imagesPath)) {
-            mkdir($imagesPath, 0755, true);
-            exec('sudo chown -R www-data:www-data ' . $imagesPath);
-        }
-
         // ファイルの存在確認
         $images = $request->file('images');
+        if (empty($images)) {
+            return response()->json(['message' => 'ファイルが存在しません'], 400);
+        }
+        // publicディレクトリが存在しない場合は作成する
+        if (!Storage::disk('s3')->exists('images/')) {
+            Storage::disk('s3')->put('images/.gitkeep', '');
+        }
         foreach ($images as $image) {
-            // 重複する画像がある場合は上書きする
-            $image->move($imagesPath, $image->getClientOriginalName());
+            Storage::disk('s3')->putFileAs('images/', $image, $image->getClientOriginalName());
         }
         return response()->json(['message' => '画像をアップロードしました']);
     }
@@ -29,14 +31,7 @@ class ArticleImageController extends Controller
      */
     public function truncate()
     {
-        $files = glob(storage_path('app/public/images/*'));
-        foreach ($files as $file) {
-            unlink($file);
-        }
-        if (empty(glob(storage_path('app/public/images/*')))) {
-            return response()->json(['message' => '全ての画像を削除しました']);
-        } else {
-            return response()->json(['message' => '画像の削除に失敗しました'], 500);
-        }
+        Storage::disk('s3')->deleteDirectory('images/');
+        return response()->json(['message' => '画像を削除しました']);
     }
 }
