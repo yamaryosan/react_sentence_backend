@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\SentenceController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ContactController;
 
 use App\Http\Controllers\ExampleController;
 
@@ -11,8 +12,14 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// 認証用ルート
-Route::get('/verify', [AdminController::class, 'checkAdmin']);
+// 文章表示のための認証用ルート
+Route::get('/sentenceVerify', [AdminController::class, 'checkSentenceAdmin']);
+// アップロードのための認証用ルート
+Route::get('/uploadVerify', [AdminController::class, 'checkUploadAdmin']);
+
+// 問い合わせ用ルート
+Route::get('/contacts', [ContactController::class, 'verify']);
+
 // 記事検索用ルート
 Route::get('/articles/search', [ArticleController::class, 'search']);
 // 文章検索用ルート
