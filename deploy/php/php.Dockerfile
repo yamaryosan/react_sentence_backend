@@ -14,7 +14,18 @@ RUN apt-get update \
 # php.iniをコピー
 COPY ./deploy/php/php.ini /usr/local/etc/php/php.ini
 # 現在のディレクトリのファイルを/var/www/htmlにコピー
-COPY . /var/www/html
+COPY ../../app /var/www/html/app
+COPY ../../bootstrap /var/www/html/bootstrap
+COPY ../../config /var/www/html/config
+COPY ../../database /var/www/html/database
+COPY ../../public /var/www/html/public
+COPY ../../resources /var/www/html/resources
+COPY ../../routes /var/www/html/routes
+COPY ../../storage /var/www/html/storage
+COPY ../../artisan /var/www/html/artisan
+COPY ../../composer.json /var/www/html/composer.json
+COPY ../../composer.lock /var/www/html/composer.lock
+COPY ../../.env /var/www/html/.env
 
 # PHP拡張をインストール(Laravelで必要)
 RUN docker-php-ext-install pdo_mysql mbstring
@@ -41,3 +52,4 @@ EXPOSE 80
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=80"]
+
