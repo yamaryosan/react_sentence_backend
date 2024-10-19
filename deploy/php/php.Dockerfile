@@ -31,7 +31,7 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/storage/app/p
 RUN chmod -R 755 /var/www/html/storage /var/www/html/storage/app/public /var/www/html/public
 
 # エントリーポイントスクリプトをコピー
-COPY entrypoint.sh /usr/local/bin/
+COPY ./deploy/php/entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 EXPOSE 80
