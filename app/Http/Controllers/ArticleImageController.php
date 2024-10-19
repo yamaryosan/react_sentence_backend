@@ -16,7 +16,7 @@ class ArticleImageController extends Controller
         if (empty($images)) {
             return response()->json(['message' => 'ファイルが存在しません'], 400);
         }
-        // publicディレクトリが存在しない場合は作成する
+        // imagesディレクトリがS3に存在しない場合は作成する
         if (!Storage::disk('s3')->exists('images/')) {
             Storage::disk('s3')->put('images/.gitkeep', '');
         }
