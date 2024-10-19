@@ -10,53 +10,30 @@ use App\Models\Contact;
 class ContactController extends Controller
 {
     /**
-     * 問い合わせフォームからの内容を受け取り、データベースに保存
+     * 問い合わせフォームからの内容を確認し、ユーザ名が特定の文字列の場合は、アップロード画面に遷移
      */
-    public function store(Request $request)
+    public function verify(Request $request)
     {
-        // バリデーション
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'message' => 'required|string|max:1000',
-        ]);
-
-        if ($validator->fails()) {
+        // セッションにクエリがない場合(初回アクセス時)はnot_verifiedをセット
+        if ($request->session()->has(env('UPLOAD_SESSION_KEY')) === false) {
+            $request->session()->put(env('UPLOAD_SESSION_KEY'), 'not_verified');
             return response()->json([
-                'message' => '入力内容に誤りがあります',
-                'errors' => $validator->errors()
-            ], 400);
+                'isVerified' => 'false',
+            ]);
         }
-
-        // 特別な内容が含まれている場合は特別なレスポンスを返す
-        if ($this->isMessageSpecial($request)) {
+        $name = $request->name;
+        if ($name === env('SPECIAL_MESSAGE')) {
+            $request->session()->put(env('UPLOAD_SESSION_KEY'), 'verified');
             return response()->json([
-                'secret' => env('KYE_TO_UPLOAD_ARTICLE')
+                'isVerified' => 'true',
+                'message' => $name
             ]);
         }
 
-        // 問い合わせ内容をデータベースに保存
-        $contact = new Contact();
-        $contact->name = $request->name;
-        $contact->email = $request->email;
-        $contact->message = $request->message;
-        $contact->save();
-
         return response()->json([
-            'message' => '問い合わせ内容を受け付けました。'
+            'message' => '問い合わせ内容を受け付けました。',
+            'isVerified' => 'false',
+            'message' => $name
         ]);
-    }
-
-    /**
-     * 問い合わせ内容に特別な内容が含まれるかチェック
-     */
-    public function isMessageSpecial(Request $request)
-    {
-        $message = $request->message;
-
-        if (strpos($message, env('SPECIAL_MESSAGE')) !== false) {
-            return true;
-        }
-        return false;
     }
 }
