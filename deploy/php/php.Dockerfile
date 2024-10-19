@@ -32,7 +32,12 @@ RUN chmod -R 755 /var/www/html/storage /var/www/html/storage/app/public /var/www
 # アプリケーションキーを生成
 RUN php artisan key:generate --force
 
-# Webサーバを自前でたてる
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=80"]
+# エントリーポイントスクリプトをコンテナ内にコピー
+COPY ./deploy/php/entrypoint.sh /usr/local/bin/entrypoint.sh
+# エントリーポイントスクリプトに実行権限を付与
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 EXPOSE 80
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=80"]
