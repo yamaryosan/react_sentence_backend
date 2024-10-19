@@ -133,11 +133,12 @@ class ArticleController extends Controller
             return $fileWithCategory['file']->getClientOriginalExtension() === 'md';
         });
 
-        // ファイルをアップロードする
+        // ファイルから記事を作成する
         foreach ($filesWithCategories as $fileWithCategory) {
             $file = $fileWithCategory['file'];
             $category = $fileWithCategory['category'];
 
+            // ファイルをアップロードする
             $file->move(storage_path('app/uploads'), $file->getClientOriginalName());
             $lines = file(storage_path('app/uploads/' . $file->getClientOriginalName()));
 
@@ -175,6 +176,8 @@ class ArticleController extends Controller
                 $articleImage->article_id = $new_article->id;
                 $articleImage->save();
             }
+            // ファイルを削除する
+            unlink(storage_path('app/uploads/' . $file->getClientOriginalName()));
         }
         $count = count($filesWithCategories);
         return response()->json(['message' => $count . '個のファイルをアップロードしました']);
