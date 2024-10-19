@@ -13,7 +13,7 @@ use App\Models\ArticleImage;
 class ArticleController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * 記事の一覧を取得する
      */
     public function index()
     {
@@ -27,7 +27,7 @@ class ArticleController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * 記事を保存する
      */
     public function store(Request $request)
     {
@@ -39,7 +39,7 @@ class ArticleController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * 記事を取得する
      */
     public function show(string $id)
     {
@@ -52,7 +52,7 @@ class ArticleController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * 記事を更新する
      */
     public function update(Request $request, string $id)
     {
@@ -64,7 +64,7 @@ class ArticleController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * 記事を削除する
      */
     public function destroy(string $id)
     {
@@ -93,6 +93,9 @@ class ArticleController extends Controller
         }
     }
 
+    /**
+     * 記事をアップロードする
+     */
     public function upload(Request $request)
     {
         // ファイルアップロードのバリデーション
@@ -116,8 +119,7 @@ class ArticleController extends Controller
             return response()->json(['error' => 'ファイルが選択されていません'], 400);
         }
 
-        // カテゴリーの割り当てに備える
-        $filesWithCategories = [];
+        // カテゴリーの割り当てを行う
         $filesWithCategories = [];
         foreach ($files as $index => $file) {
             $filesWithCategories[] = [
@@ -131,11 +133,12 @@ class ArticleController extends Controller
             return $fileWithCategory['file']->getClientOriginalExtension() === 'md';
         });
 
-        // ファイルをアップロード
+        // ファイルから記事を作成する
         foreach ($filesWithCategories as $fileWithCategory) {
             $file = $fileWithCategory['file'];
             $category = $fileWithCategory['category'];
 
+            // ファイルをアップロードする
             $file->move(storage_path('app/uploads'), $file->getClientOriginalName());
             $lines = file(storage_path('app/uploads/' . $file->getClientOriginalName()));
 
@@ -143,13 +146,13 @@ class ArticleController extends Controller
             $filename = $file->getClientOriginalName();
             $title = str_replace('.md', '', $filename);
 
-            // 各行に対して画像のパスを変換
+            // 各行に対して画像のパスを変換する
             $convertedLines = $this->convertImagePath($lines);
 
-            // 文字列に変換
+            // 文字列に変換する
             $content = implode($convertedLines);
 
-            // 画像のパスを取得
+            // 画像のパスを取得する
             $imagePaths = [];
             foreach ($convertedLines as $line) {
                 preg_match_all('/!\[.*?\]\((.*?)\)/', $line, $matches);
@@ -158,14 +161,14 @@ class ArticleController extends Controller
                 }
             }
 
-            // 記事を保存
+            // 記事を保存する
             $new_article = new Article();
             $new_article->title = $title;
             $new_article->content = $content;
             $new_article->category = $category;
             $new_article->save();
 
-            // 画像を保存
+            // 画像を保存する
             foreach ($imagePaths as $imagePath) {
                 $articleImage = new ArticleImage();
                 $articleImage->name = basename($imagePath);
@@ -173,13 +176,15 @@ class ArticleController extends Controller
                 $articleImage->article_id = $new_article->id;
                 $articleImage->save();
             }
+            // ファイルを削除する
+            unlink(storage_path('app/uploads/' . $file->getClientOriginalName()));
         }
         $count = count($filesWithCategories);
         return response()->json(['message' => $count . '個のファイルをアップロードしました']);
     }
 
     /**
-     * 検索
+     * 記事を検索する
      */
     public function search(Request $request)
     {
@@ -206,18 +211,16 @@ class ArticleController extends Controller
     }
 
     /**
-     * ../_resources形式の画像のパスを変換し、/images/xxx.pngの形式にする関数
-     * フロントエンドで画像を表示するために使用
-     * ![text](../_resources/example.png) -> ![example](/images/example.png)
+     * S3の画像のパスを変換する
      */
     public function convertImagePath(array $lines)
     {
         $convertImagePath = function ($line) {
             // preg_replace_callbackは、正規表現にマッチした文字列をコールバック関数で置換する関数
             return preg_replace_callback('/!\[.*?\]\((.*?)\)/', function ($matches) {
-                $imagePath = $matches[1]; // 画像のパス(../_resources/example.png)
+                $imagePath = $matches[1]; // 画像のパス(S3のパス)
                 if (strpos($imagePath, '../_resources/') === 0) {
-                    $fileImagePath = Storage::disk('public')->url('/images/' . basename($imagePath));
+                    $fileImagePath = Storage::disk('s3')->url('images/' . basename($imagePath));
                     return '![' . basename($imagePath) . '](' . $fileImagePath . ')';
                 }
                 return $matches[0]; // 画像のパスが変換対象でない場合はそのまま返す
@@ -228,11 +231,12 @@ class ArticleController extends Controller
     }
 
     /**
-     * 記事IDに該当する画像のパス群を取得
+     * 記事IDに該当する画像のパス群を取得する
      * 該当する記事がない場合はデフォルトの画像を返す
      */
     public function getImagePaths(string $articleId): array
     {
+        // デフォルトの画像のパスを取得する。デフォルトの画像のみpublicに保存されている
         $defaultImagePath = [Storage::disk('public')->url('noimage.png')];
 
         // デフォルトの画像にアクセスできるか確認
