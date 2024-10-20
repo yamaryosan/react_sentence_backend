@@ -11,35 +11,27 @@ class AdminController extends Controller
      */
     public function checkSentenceAdmin(Request $request)
     {
-        if (env('SENTENCE_SESSION_KEY') === '') {
-            return response()->json(['message' => '環境変数が設定されていません', 'env' => env('SENTENCE_SESSION_KEY')], 500);
-        }
-        // セッションが生成できない場合はエラーを返す
-        if ($request->session()->getId() === '') {
-            return response()->json(['message' => 'セッションが生成できません', 'env' => env('SENTENCE_SESSION_KEY')], 500);
-        }
-
         // セッションにクエリがない場合(初回アクセス時)はnot_verifiedをセットしfalseを返す
-        if ($request->session()->has(env('SENTENCE_SESSION_KEY')) === false) {
-            $request->session()->put(env('SENTENCE_SESSION_KEY'), 'not_verified');
-            return response()->json(['isVerified' => 'false', 'env' => env('SENTENCE_SESSION_KEY')]);
+        if ($request->session()->has('sentence_session_key') === false) {
+            $request->session()->put('sentence_session_key', 'not_verified');
+            return response()->json(['isVerified' => 'false', 'env' => 'sentence_session_key']);
         }
 
         // セッションからクエリを取得
-        $query = $request->session()->get(env('SENTENCE_SESSION_KEY'));
+        $query = $request->session()->get('sentence_session_key');
 
         // クエリがfalseの場合はfalseを返す
         if ($query === 'not_verified') {
-            return response()->json(['isVerified' => 'false', 'env' => env('SENTENCE_SESSION_KEY')]);
+            return response()->json(['isVerified' => 'false', 'env' => 'sentence_session_key']);
         }
 
         // クエリがtrueの場合はtrueを返す
         if ($query === 'verified') {
-            return response()->json(['isVerified' => 'true', 'env' => env('SENTENCE_SESSION_KEY')]);
+            return response()->json(['isVerified' => 'true', 'env' => 'sentence_session_key']);
         }
 
         // クエリがfalseでもtrueでもない場合はfalseを返す
-        return response()->json(['isVerified' => 'false', 'env' => env('SENTENCE_SESSION_KEY')]);
+        return response()->json(['isVerified' => 'false', 'env' => 'sentence_session_key']);
     }
 
     /**
@@ -47,19 +39,14 @@ class AdminController extends Controller
      */
     public function checkUploadAdmin(Request $request)
     {
-        // セッションが生成できない場合はエラーを返す
-        if ($request->session()->getId() === '') {
-            return response()->json(['message' => 'セッションが生成できません'], 500);
-        }
-
         // セッションにクエリがない場合(初回アクセス時)はnot_verifiedをセットしfalseを返す
-        if ($request->session()->has(env('UPLOAD_SESSION_KEY')) === false) {
-            $request->session()->put(env('UPLOAD_SESSION_KEY'), 'not_verified');
+        if ($request->session()->has('upload_session_key') === false) {
+            $request->session()->put('upload_session_key', 'not_verified');
             return response()->json(['isVerified' => 'false', 'message' => 'セッションが生成できません']);
         }
 
         // セッションからクエリを取得
-        $query = $request->session()->get(env('UPLOAD_SESSION_KEY'));
+        $query = $request->session()->get('upload_session_key');
 
         // クエリがfalseの場合はfalseを返す
         if ($query === 'not_verified') {
