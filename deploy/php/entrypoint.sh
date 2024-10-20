@@ -12,10 +12,10 @@ if [ -z "$APP_KEY" ]; then
 fi
 
 # セッションテーブルの作成
-php artisan session:table --force
+php artisan session:table
 
 # マイグレーションの実行（オプション）
-php artisan migrate --force
+php artisan migrate
 
 
 # キャッシュのクリア
