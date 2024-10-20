@@ -13,7 +13,7 @@ if [ -z "$APP_KEY" ]; then
 fi
 
 # マイグレーションの実行
-php artisan migrate
+php artisan migrate --force
 echo "Migrations executed"
 
 # キャッシュのクリア
