@@ -9,6 +9,8 @@ RUN apt-get update \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
+    libpq-dev \
+    postgresql-client \
     && apt-get clean
 
 # php.iniをコピー
