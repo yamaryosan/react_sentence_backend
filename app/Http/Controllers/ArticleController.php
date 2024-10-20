@@ -241,12 +241,12 @@ class ArticleController extends Controller
 
         // デフォルトの画像にアクセスできるか確認
         if (!Storage::disk('public')->exists('noimage.png')) {
-            return response()->json(['message' => 'デフォルトの画像が存在しません'], 500);
+            return [];
         }
 
-        // デフォルトの画像がない場合はエラー
+        // デフォルトの画像がない場合は空の配列を返す
         if (empty($defaultImagePath)) {
-            return response()->json(['message' => 'デフォルトの画像が設定されていません'], 500);
+            return [];
         }
 
         // 記事IDに該当する画像のパス群を返す (該当する記事がない場合はデフォルトの画像を返す)
