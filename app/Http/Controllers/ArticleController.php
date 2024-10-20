@@ -190,11 +190,11 @@ class ArticleController extends Controller
     {
         $keyword = $request->keyword;
         // キーワードが特定の文字列の場合、文章の検索を有効化または無効化する
-        if ($keyword === 'lock') {
-            $request->session()->put('sentence_session_key', 'not_verified');
+        if ($keyword === env('LOCK_KEYWORD')) {
+            $request->session()->put(env('SENTENCE_SESSION_KEY'), 'not_verified');
             return [];
-        } else if ($keyword === 'unlock') {
-            $request->session()->put('sentence_session_key', 'verified');
+        } else if ($keyword === env('UNLOCK_KEYWORD')){
+            $request->session()->put(env('SENTENCE_SESSION_KEY'), 'verified');
             return [];
         }
 

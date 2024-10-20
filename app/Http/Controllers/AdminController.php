@@ -12,17 +12,17 @@ class AdminController extends Controller
     public function checkSentenceAdmin(Request $request)
     {
         // セッションにクエリがない場合(初回アクセス時)はnot_verifiedをセットしfalseを返す
-        if ($request->session()->has('sentence_session_key') === false) {
-            $request->session()->put('sentence_session_key', 'not_verified');
-            return response()->json(['isVerified' => 'true', 'env' => 'sentence_session_key']);
+        if ($request->session()->has(env('SENTENCE_SESSION_KEY')) === false) {
+            $request->session()->put(env('SENTENCE_SESSION_KEY'), 'not_verified');
+            return response()->json(['isVerified' => 'false']);
         }
 
         // セッションからクエリを取得
-        $query = $request->session()->get('sentence_session_key');
+        $query = $request->session()->get(env('SENTENCE_SESSION_KEY'));
 
         // クエリがfalseの場合はfalseを返す
         if ($query === 'not_verified') {
-            return response()->json(['isVerified' => 'true']);
+            return response()->json(['isVerified' => 'false']);
         }
 
         // クエリがtrueの場合はtrueを返す
@@ -40,25 +40,29 @@ class AdminController extends Controller
     public function checkUploadAdmin(Request $request)
     {
         // セッションにクエリがない場合(初回アクセス時)はnot_verifiedをセットしfalseを返す
-        if ($request->session()->has('upload_session_key') === false) {
-            $request->session()->put('upload_session_key', 'not_verified');
-            return response()->json(['isVerified' => 'true']);
+        if ($request->session()->has(env('UPLOAD_SESSION_KEY')) === false) {
+            $request->session()->put(env('UPLOAD_SESSION_KEY'), 'not_verified');
+            return response()->json([
+                'isVerified' => 'false',
+            ]);
         }
 
         // セッションからクエリを取得
-        $query = $request->session()->get('upload_session_key');
+        $query = $request->session()->get(env('UPLOAD_SESSION_KEY'));
 
-        // クエリがfalseの場合はfalseを返す
+        // クエリがnot_verifiedの場合はfalseを返す
         if ($query === 'not_verified') {
-            return response()->json(['isVerified' => 'true']);
+            return response()->json([
+                'isVerified' => 'false',
+            ]);
         }
 
-        // クエリがtrueの場合はtrueを返す
+        // クエリがverifiedの場合はtrueを返す
         if ($query === 'verified') {
             return response()->json(['isVerified' => 'true']);
         }
 
-        // クエリがfalseでもtrueでもない場合はエラーを返す
+        // クエリがnot_verifiedでもverifiedでもない場合はエラーを返す
         return response()->json(['message' => 'クエリが不正です']);
     }
 }
