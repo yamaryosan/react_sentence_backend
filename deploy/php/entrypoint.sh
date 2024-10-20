@@ -13,6 +13,9 @@ fi
 
 # マイグレーションの実行（オプション）
 php artisan migrate --force
+# セッションテーブルの作成
+php artisan session:table
+php artisan migrate
 
 # キャッシュのクリア
 php artisan config:cache
