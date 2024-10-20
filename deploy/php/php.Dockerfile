@@ -28,8 +28,7 @@ WORKDIR /var/www/html
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 # シンボリックリンクを作成
 RUN php artisan storage:link
-# セッションテーブルの作成
-RUN php artisan session:table
+
 # ストレージディレクトリとpublicディレクトリのパーミッションを変更(静的コンテンツアップロード用)
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/storage/app/public /var/www/html/public
 RUN chmod -R 755 /var/www/html/storage /var/www/html/storage/app/public /var/www/html/public
