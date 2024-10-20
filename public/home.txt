@@ -11,3 +11,18 @@ Webエンジニアリングの勉強が主の目的で、休み時間に見ら�
 泣く泣くAWSを諦め、Render.comとVercelを使っています。
 
 よろしくお願いします。
+
+私の保有技術
+
+- HTML/CSS
+- JavaScript
+- TypeScript
+- React
+- Next.js
+- PHP
+- Laravel
+- AWS
+- Docker
+- MySQL
+- PostgreSQL
+- AWS (EC2, Fargate, S3, Route53, ELB)
