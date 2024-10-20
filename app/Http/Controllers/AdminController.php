@@ -11,6 +11,11 @@ class AdminController extends Controller
      */
     public function checkSentenceAdmin(Request $request)
     {
+        // セッションが生成できない場合はエラーを返す
+        if ($request->session()->getId() === '') {
+            return response()->json(['message' => 'セッションが生成できません'], 500);
+        }
+
         // セッションにクエリがない場合(初回アクセス時)はnot_verifiedをセットしfalseを返す
         if ($request->session()->has(env('SENTENCE_SESSION_KEY')) === false) {
             $request->session()->put(env('SENTENCE_SESSION_KEY'), 'not_verified');
@@ -39,6 +44,11 @@ class AdminController extends Controller
      */
     public function checkUploadAdmin(Request $request)
     {
+        // セッションが生成できない場合はエラーを返す
+        if ($request->session()->getId() === '') {
+            return response()->json(['message' => 'セッションが生成できません'], 500);
+        }
+
         // セッションにクエリがない場合(初回アクセス時)はnot_verifiedをセットしfalseを返す
         if ($request->session()->has(env('UPLOAD_SESSION_KEY')) === false) {
             $request->session()->put(env('UPLOAD_SESSION_KEY'), 'not_verified');
