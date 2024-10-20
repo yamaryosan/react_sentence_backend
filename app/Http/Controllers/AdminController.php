@@ -13,13 +13,13 @@ class AdminController extends Controller
     {
         // セッションが生成できない場合はエラーを返す
         if ($request->session()->getId() === '') {
-            return response()->json(['message' => 'セッションが生成できません'], 500);
+            return response()->json(['message' => 'セッションが生成できません', 'env' => env('SENTENCE_SESSION_KEY')], 500);
         }
 
         // セッションにクエリがない場合(初回アクセス時)はnot_verifiedをセットしfalseを返す
         if ($request->session()->has(env('SENTENCE_SESSION_KEY')) === false) {
             $request->session()->put(env('SENTENCE_SESSION_KEY'), 'not_verified');
-            return response()->json(['isVerified' => 'false']);
+            return response()->json(['isVerified' => 'false', 'env' => env('SENTENCE_SESSION_KEY')]);
         }
 
         // セッションからクエリを取得
@@ -27,16 +27,16 @@ class AdminController extends Controller
 
         // クエリがfalseの場合はfalseを返す
         if ($query === 'not_verified') {
-            return response()->json(['isVerified' => 'false']);
+            return response()->json(['isVerified' => 'false', 'env' => env('SENTENCE_SESSION_KEY')]);
         }
 
         // クエリがtrueの場合はtrueを返す
         if ($query === 'verified') {
-            return response()->json(['isVerified' => 'true']);
+            return response()->json(['isVerified' => 'true', 'env' => env('SENTENCE_SESSION_KEY')]);
         }
 
         // クエリがfalseでもtrueでもない場合はfalseを返す
-        return response()->json(['isVerified' => 'false']);
+        return response()->json(['isVerified' => 'false', 'env' => env('SENTENCE_SESSION_KEY')]);
     }
 
     /**
