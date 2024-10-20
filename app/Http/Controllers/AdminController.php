@@ -35,8 +35,8 @@ class AdminController extends Controller
             return response()->json(['isVerified' => 'true']);
         }
 
-        // クエリがfalseでもtrueでもない場合はエラーを返す
-        return response()->json(['message' => 'クエリが不正です'], 400);
+        // クエリがfalseでもtrueでもない場合はfalseを返す
+        return response()->json(['isVerified' => 'false']);
     }
 
     /**
@@ -52,7 +52,7 @@ class AdminController extends Controller
         // セッションにクエリがない場合(初回アクセス時)はnot_verifiedをセットしfalseを返す
         if ($request->session()->has(env('UPLOAD_SESSION_KEY')) === false) {
             $request->session()->put(env('UPLOAD_SESSION_KEY'), 'not_verified');
-            return response()->json(['isVerified' => 'false']);
+            return response()->json(['isVerified' => 'false', 'message' => 'セッションが生成できません']);
         }
 
         // セッションからクエリを取得
@@ -60,15 +60,15 @@ class AdminController extends Controller
 
         // クエリがfalseの場合はfalseを返す
         if ($query === 'not_verified') {
-            return response()->json(['isVerified' => 'false']);
+            return response()->json(['isVerified' => 'false', 'message' => 'セッションが生成できません']);
         }
 
         // クエリがtrueの場合はtrueを返す
         if ($query === 'verified') {
-            return response()->json(['isVerified' => 'true']);
+            return response()->json(['isVerified' => 'true', 'message' => '認証が完了しました']);
         }
 
-        // クエリがfalseでもtrueでもない場合はエラーを返す
-        return response()->json(['message' => 'クエリが不正です'], 400);
+        // クエリがfalseでもtrueでもない場合はfalseを返す
+        return response()->json(['isVerified' => 'false', 'message' => 'クエリが不正です']);
     }
 }
