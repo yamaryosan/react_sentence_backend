@@ -22,7 +22,7 @@ class ContactController extends Controller
             ]);
         }
         $name = $request->name;
-        if ($name === env('SPECIAL_MESSAGE')) {
+        if ($name === 'spe') {
             $request->session()->put('upload_session_key', 'verified');
             return response()->json([
                 'isVerified' => 'true',
