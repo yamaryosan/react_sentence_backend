@@ -15,15 +15,15 @@ class ContactController extends Controller
     public function verify(Request $request)
     {
         // セッションにクエリがない場合(初回アクセス時)はnot_verifiedをセット
-        if ($request->session()->has('upload_session_key') === false) {
-            $request->session()->put('upload_session_key', 'not_verified');
+        if ($request->session()->has(env('UPLOAD_SESSION_KEY')) === false) {
+            $request->session()->put(env('UPLOAD_SESSION_KEY'), 'not_verified');
             return response()->json([
                 'isVerified' => 'false',
             ]);
         }
         $name = $request->name;
-        if ($name === 'spe') {
-            $request->session()->put('upload_session_key', 'verified');
+        if ($name === env('SPECIAL_KEYWORD')) {
+            $request->session()->put(env('UPLOAD_SESSION_KEY'), 'verified');
             return response()->json([
                 'isVerified' => 'true',
                 'message' => $name
