@@ -12,13 +12,9 @@ if [ -z "$APP_KEY" ]; then
     echo "Application key generated"
 fi
 
-# マイグレーションの実行(すでにマイグレーションが存在する場合は実行しない)
-if [ $(find database/migrations -name "*_create_users_table.php" | wc -l) -eq 0 ]; then
-    php artisan migrate
-    echo "Migrations executed"
-else
-    echo "Migrations already exist"
-fi
+# マイグレーションの実行
+php artisan migrate
+echo "Migrations executed"
 
 # キャッシュのクリア
 php artisan config:cache
