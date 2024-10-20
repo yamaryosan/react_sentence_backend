@@ -12,7 +12,9 @@ if [ -z "$APP_KEY" ]; then
 fi
 
 # セッションテーブルの作成
-php artisan session:table
+if [ ! -f database/migrations/*_create_sessions_table.php ]; then
+    php artisan session:table
+fi
 
 # マイグレーションの実行（オプション）
 php artisan migrate
