@@ -17,7 +17,7 @@ COPY ./deploy/php/php.ini /usr/local/etc/php/php.ini
 COPY . /var/www/html
 
 # PHP拡張をインストール(Laravelで必要)
-RUN docker-php-ext-install pdo_mysql mbstring pgsql pdo_pgsql
+RUN docker-php-ext-install pdo_mysql mbstring pdo_pgsql
 
 # Composerをインストール(Laravel10では2.2.0以上)
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
