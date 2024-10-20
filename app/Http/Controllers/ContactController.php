@@ -18,22 +18,21 @@ class ContactController extends Controller
         if ($request->session()->has(env('UPLOAD_SESSION_KEY')) === false) {
             $request->session()->put(env('UPLOAD_SESSION_KEY'), 'not_verified');
             return response()->json([
-                'isVerified' => 'false',
+                'isVerified' => 'false'
             ]);
         }
+        // ユーザ名が特定の文字列の場合は、アップロード画面を許可
         $name = $request->name;
-        if ($name === env('SPECIAL_KEYWORD')) {
+        if ($name === env('UPLOAD_PERMISSION_USERNAME')) {
             $request->session()->put(env('UPLOAD_SESSION_KEY'), 'verified');
             return response()->json([
-                'isVerified' => 'true',
-                'message' => $name
+                'isVerified' => 'true'
             ]);
         }
 
         return response()->json([
             'message' => '問い合わせ内容を受け付けました。',
-            'isVerified' => 'false',
-            'message' => $name
+            'isVerified' => 'false'
         ]);
     }
 }
