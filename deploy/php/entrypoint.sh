@@ -12,6 +12,12 @@ if [ -z "$APP_KEY" ]; then
     echo "Application key generated"
 fi
 
+# キャッシュのクリア
+php artisan config:cache
+php artisan cache:clear
+php artisan route:cache
+php artisan view:cache
+
 # セッションテーブルの作成
 if [ $(find database/migrations -name "*_create_sessions_table.php" | wc -l) -eq 0 ]; then
     php artisan session:table
