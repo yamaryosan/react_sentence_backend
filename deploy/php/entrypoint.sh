@@ -11,11 +11,12 @@ if [ -z "$APP_KEY" ]; then
     php artisan key:generate --force
 fi
 
+# セッションテーブルの作成
+php artisan session:table --force
+
 # マイグレーションの実行（オプション）
 php artisan migrate --force
-# セッションテーブルの作成
-php artisan session:table
-php artisan migrate
+
 
 # キャッシュのクリア
 php artisan config:cache
