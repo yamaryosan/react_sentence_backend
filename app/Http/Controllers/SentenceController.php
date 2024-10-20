@@ -131,10 +131,10 @@ class SentenceController extends Controller
         $keyword = $request->keyword;
         // キーワードが特定の文字列の場合、文章の検索を有効化または無効化する
         if ($keyword === env('LOCK_KEYWORD')) {
-            $request->session()->put(env('SENTENCE_SESSION_KEY'), 'not_verified');
+            $request->session()->put('sentence_session_key', 'not_verified');
             return [];
         } else if ($keyword === env('UNLOCK_KEYWORD')) {
-            $request->session()->put(env('SENTENCE_SESSION_KEY'), 'verified');
+            $request->session()->put('sentence_session_key', 'verified');
             return [];
         }
 
