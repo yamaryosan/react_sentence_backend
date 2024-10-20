@@ -14,11 +14,12 @@ fi
 # セッションテーブルの作成
 if [ ! -f database/migrations/*_create_sessions_table.php ]; then
     php artisan session:table
+else
+    echo "Sessions table already exists"
 fi
 
-# マイグレーションの実行（オプション）
-php artisan migrate
-
+# マイグレーションの実行
+php artisan migrate --force
 
 # キャッシュのクリア
 php artisan config:cache
