@@ -9,18 +9,21 @@ fi
 # アプリケーションキーが設定されていない場合、生成
 if [ -z "$APP_KEY" ]; then
     php artisan key:generate --force
+    echo "Application key generated"
 fi
 
 # セッションテーブルの作成
-if [ ! -f database/migrations/*_create_sessions_table.php ]; then
+if [ $(find database/migrations -name "*_create_sessions_table.php" | wc -l) -eq 0 ]; then
     php artisan session:table
+    echo "Sessions table created"
 else
     echo "Sessions table already exists"
 fi
 
 # マイグレーションの実行(すでにマイグレーションが存在する場合は実行しない)
-if [ ! -f database/migrations/*_create_users_table.php ]; then
+if [ $(find database/migrations -name "*_create_users_table.php" | wc -l) -eq 0 ]; then
     php artisan migrate
+    echo "Migrations executed"
 else
     echo "Migrations already exist"
 fi
