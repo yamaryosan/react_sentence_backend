@@ -22,16 +22,16 @@ class AdminController extends Controller
 
         // クエリがfalseの場合はfalseを返す
         if ($query === 'not_verified') {
-            return response()->json(['isVerified' => 'false', 'env' => 'sentence_session_key']);
+            return response()->json(['isVerified' => 'false']);
         }
 
         // クエリがtrueの場合はtrueを返す
         if ($query === 'verified') {
-            return response()->json(['isVerified' => 'true', 'env' => 'sentence_session_key']);
+            return response()->json(['isVerified' => 'true']);
         }
 
-        // クエリがfalseでもtrueでもない場合はfalseを返す
-        return response()->json(['isVerified' => 'false', 'env' => 'sentence_session_key']);
+        // クエリがfalseでもtrueでもない場合はエラーを返す
+        return response()->json(['message' => 'クエリが不正です']);
     }
 
     /**
@@ -42,7 +42,7 @@ class AdminController extends Controller
         // セッションにクエリがない場合(初回アクセス時)はnot_verifiedをセットしfalseを返す
         if ($request->session()->has('upload_session_key') === false) {
             $request->session()->put('upload_session_key', 'not_verified');
-            return response()->json(['isVerified' => 'false', 'message' => 'セッションが生成できません']);
+            return response()->json(['isVerified' => 'false']);
         }
 
         // セッションからクエリを取得
@@ -50,15 +50,15 @@ class AdminController extends Controller
 
         // クエリがfalseの場合はfalseを返す
         if ($query === 'not_verified') {
-            return response()->json(['isVerified' => 'false', 'message' => 'セッションが生成できません']);
+            return response()->json(['isVerified' => 'false']);
         }
 
         // クエリがtrueの場合はtrueを返す
         if ($query === 'verified') {
-            return response()->json(['isVerified' => 'true', 'message' => '認証が完了しました']);
+            return response()->json(['isVerified' => 'true']);
         }
 
-        // クエリがfalseでもtrueでもない場合はfalseを返す
-        return response()->json(['isVerified' => 'false', 'message' => 'クエリが不正です']);
+        // クエリがfalseでもtrueでもない場合はエラーを返す
+        return response()->json(['message' => 'クエリが不正です']);
     }
 }
