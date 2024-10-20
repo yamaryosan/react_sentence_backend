@@ -14,5 +14,11 @@ fi
 # マイグレーションの実行（オプション）
 php artisan migrate --force
 
+# キャッシュのクリア
+php artisan config:cache
+php artisan cache:clear
+php artisan route:cache
+php artisan view:cache
+
 # コンテナのエントリーポイントとしてコマンドを実行
 exec "$@"
