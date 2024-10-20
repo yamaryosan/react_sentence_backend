@@ -11,6 +11,9 @@ class AdminController extends Controller
      */
     public function checkSentenceAdmin(Request $request)
     {
+        if (env('SENTENCE_SESSION_KEY') === '') {
+            return response()->json(['message' => '環境変数が設定されていません', 'env' => env('SENTENCE_SESSION_KEY')], 500);
+        }
         // セッションが生成できない場合はエラーを返す
         if ($request->session()->getId() === '') {
             return response()->json(['message' => 'セッションが生成できません', 'env' => env('SENTENCE_SESSION_KEY')], 500);
