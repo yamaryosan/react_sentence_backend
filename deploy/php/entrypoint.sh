@@ -1,10 +1,6 @@
 #!/bin/sh
 set -e
 
-# Composerのインストール
-echo "Running composer"
-composer install --no-dev --working-dir=/var/www/html
-
 # .env.exampleをコピー
 cp .env.example .env
 
