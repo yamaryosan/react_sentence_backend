@@ -1,6 +1,10 @@
 #!/bin/sh
 set -e
 
+# Composerのインストール
+echo "Running composer"
+composer install --no-dev --working-dir=/var/www/html
+
 # .env.exampleをコピー
 cp .env.example .env
 
@@ -25,6 +29,3 @@ env | grep -E '^(APP_KEY|DB_|AWS_|MEILISEARCH_|SCOUT_|NG_WORDS|UPLOAD_PERMISSION
 # マイグレーションの実行
 php artisan migrate --force
 echo "Migrations executed"
-
-# コンテナのエントリーポイントとしてコマンドを実行
-exec "$@"
