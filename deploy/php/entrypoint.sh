@@ -26,9 +26,5 @@ env | grep -E '^(APP_KEY|DB_|AWS_|MEILISEARCH_|SCOUT_|NG_WORDS|UPLOAD_PERMISSION
 php artisan migrate --force
 echo "Migrations executed"
 
-# データベース設定のデバッグ
-php -r "echo json_encode(require '/var/www/html/config/database.php', JSON_PRETTY_PRINT);" > /tmp/database_config.json
-cat /tmp/database_config.json
-
 # コンテナのエントリーポイントとしてコマンドを実行
 exec "$@"
