@@ -1,10 +1,8 @@
 #!/bin/sh
 set -e
 
-# .envファイルが存在しない場合、.env.exampleをコピー
-if [ ! -f .env ]; then
-    cp .env.example .env
-fi
+# .env.exampleをコピー
+cp .env.example .env
 
 # アプリケーションキーが設定されていない場合、生成
 if [ -z "$APP_KEY" ]; then
