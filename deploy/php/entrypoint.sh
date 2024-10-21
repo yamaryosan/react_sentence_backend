@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 
-# .env.exampleをコピー
-cp .env.example .env
+# .env.productionをコピー
+cp .env.production .env
 
 # アプリケーションキーが設定されていない場合、生成
 if [ -z "$APP_KEY" ]; then
