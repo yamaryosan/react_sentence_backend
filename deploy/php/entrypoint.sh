@@ -26,5 +26,9 @@ env | grep -E '^(APP_KEY|DB_|AWS_|MEILISEARCH_|SCOUT_|NG_WORDS|UPLOAD_PERMISSION
 php artisan migrate --force
 echo "Migrations executed"
 
+# デバッグ用 ,.envの内容を表示
+echo "Current environment variables:"
+cat .env
+
 # コンテナのエントリーポイントとしてコマンドを実行
 exec "$@"
