@@ -18,9 +18,5 @@ env | grep -E '^(APP_KEY|DB_|AWS_|MEILISEARCH_|SCOUT_|NG_WORDS|UPLOAD_PERMISSION
 php artisan migrate --force
 echo "Migrations executed"
 
-# キャッシュのクリア
-php artisan config:clear
-php artisan cache:clear
-
 # コンテナのエントリーポイントとしてコマンドを実行
 exec "$@"
