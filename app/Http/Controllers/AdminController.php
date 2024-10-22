@@ -11,6 +11,25 @@ class AdminController extends Controller
      */
     public function checkSentenceAdmin(Request $request)
     {
+        // リクエストヘッダーとCookieの詳細なログ
+        \Log::info('Request Details', [
+            'headers' => collect($request->headers->all())
+                ->map(fn($item) => is_array($item) ? $item[0] : $item)
+                ->toArray(),
+            'cookies' => $request->cookies->all(),
+            'session_cookie_name' => config('session.cookie'),
+            'has_session_cookie' => $request->hasCookie(config('session.cookie')),
+        ]);
+        // セッション設定の確認
+        \Log::info('Session Config', [
+            'driver' => config('session.driver'),
+            'domain' => config('session.domain'),
+            'secure' => config('session.secure'),
+            'same_site' => config('session.same_site'),
+            'path' => config('session.path'),
+            'lifetime' => config('session.lifetime'),
+        ]);
+
         $sessionKey = env('SENTENCE_SESSION_KEY');
 
         if ($sessionKey === null) {
