@@ -11,43 +11,72 @@ class AdminController extends Controller
      */
     public function checkSentenceAdmin(Request $request)
     {
-        if (env('SENTENCE_SESSION_KEY') === null) {
+        $sessionKey = env('SENTENCE_SESSION_KEY');
+
+        if ($sessionKey === null) {
             return response()->json(['message' => 'SENTENCE_SESSION_KEYが設定されていません']);
         }
 
-        // セッションからクエリを取得
-        $query = $request->session()->get(env('SENTENCE_SESSION_KEY'));
+        // セッションの状態をログに記録
+        \Log::info('Session State:', [
+            'session_id' => $request->session()->getId(),
+            'all_session_data' => $request->session()->all(),
+            'current_query' => $request->session()->get($sessionKey)
+        ]);
+
+        $query = $request->session()->get($sessionKey);
 
         if ($query === null) {
-            // セッションにnot_verifiedをセット
-            $request->session()->put(env('SENTENCE_SESSION_KEY'), 'not_verified');
-            return response()->json(['message' => 'クエリがnullだったので、セッションにnot_verifiedをセットしました。']);
+            $request->session()->put($sessionKey, 'not_verified');
+
+            // 保存の確認
+            \Log::info('After null check:', [
+                'new_value' => $request->session()->get($sessionKey)
+            ]);
+            return response()->json([
+                'message' => 'クエリがnullだったので、セッションにnot_verifiedをセットしました。',
+                'debug' => [
+                    'session_id' => $request->session()->getId(),
+                    'new_session_value' => $request->session()->get($sessionKey)
+                ]
+            ]);
         }
 
-        // クエリがtrueの場合はtrueを返す
         if ($query === 'verified') {
             return response()->json([
                 'isVerified' => 'true',
                 'message' => 'セッションにクエリがverifiedのため、trueを返しました。',
-                'session' => $request->session()->get(env('SENTENCE_SESSION_KEY'))
+                'session' => $query,
+                'debug' => [
+                    'session_id' => $request->session()->getId()
+                ]
             ]);
         }
 
-        // クエリがfalseの場合はfalseを返す
         if ($query === 'not_verified') {
-            // 再度、セッションにnot_verifiedをセット
-            $request->session()->put(env('SENTENCE_SESSION_KEY'), 'not_verified');
+            $request->session()->put($sessionKey, 'not_verified');
+            $request->session()->save();  // 明示的な保存
+
             return response()->json([
                 'isVerified' => 'false',
                 'message' => 'セッションにクエリがnot_verifiedのため、falseを返しました。',
-                'session' => $request->session()->get(env('SENTENCE_SESSION_KEY'))
+                'session' => $query,
+                'debug' => [
+                    'session_id' => $request->session()->getId(),
+                    'verified_status' => $request->session()->get($sessionKey)
+                ]
             ]);
         }
 
-        // クエリがfalseでもtrueでもない場合はエラーを返す
+        // 不正な値の場合
         return response()->json([
             'message' => 'クエリが不正です',
-            'session' => $request->session()->get(env('SENTENCE_SESSION_KEY'))
+            'session' => $query,
+            'debug' => [
+                'current_value' => $query,
+                'session_id' => $request->session()->getId(),
+                'all_session_data' => $request->session()->all()
+            ]
         ]);
     }
 
