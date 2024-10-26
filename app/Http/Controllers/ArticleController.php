@@ -128,6 +128,7 @@ class ArticleController extends Controller
             return response()->json(['error' => 'カテゴリが選択されていません'], 400);
         }
 
+        // ファイルが選択されていない場合はエラー
         if (empty($files)) {
             return response()->json(['error' => 'ファイルが選択されていません'], 400);
         }
@@ -135,16 +136,14 @@ class ArticleController extends Controller
         // カテゴリーの割り当てを行う
         $filesWithCategories = [];
         foreach ($files as $index => $file) {
-            $filesWithCategories[] = [
-                'file' => $file,
-                'category' => $categories[$index] // 対応するカテゴリーを割り当てる
-            ];
+            // ファイルの拡張子が.mdの場合のみ、ファイルとカテゴリーを連想配列に格納する
+            if ($file->getClientOriginalExtension() === 'md') {
+                $filesWithCategories[] = [
+                    'file' => $file,
+                    'category' => $categories[$index] // 対応するカテゴリーを割り当てる
+                ];
+            }
         }
-
-        // ファイルの拡張子がmdでない場合は配列から削除
-        $filesWithCategories = array_filter($filesWithCategories, function ($fileWithCategory) {
-            return $fileWithCategory['file']->getClientOriginalExtension() === 'md';
-        });
 
         // ファイルから記事を作成する
         foreach ($filesWithCategories as $fileWithCategory) {
