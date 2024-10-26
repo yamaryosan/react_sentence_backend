@@ -121,6 +121,12 @@ class ArticleController extends Controller
         }
 
         $files = $request->file('files');
+
+        // ファイルが選択されていない場合はエラー
+        if (empty($files)) {
+            return response()->json(['error' => 'ファイルが選択されていません'], 400);
+        }
+
         $categories = $request->input('categories');
 
         // カテゴリが指定されていない場合はエラー
@@ -128,27 +134,14 @@ class ArticleController extends Controller
             return response()->json(['error' => 'カテゴリが選択されていません'], 400);
         }
 
-        // ファイルが選択されていない場合はエラー
-        if (empty($files)) {
-            return response()->json(['error' => 'ファイルが選択されていません'], 400);
-        }
-
-        // カテゴリーの割り当てを行う
-        $filesWithCategories = [];
+        // 画像のパスを保存する
+        $imagePaths = [];
+        // ファイルを1つずつ処理する
         foreach ($files as $index => $file) {
-            // ファイルの拡張子が.mdの場合のみ、ファイルとカテゴリーを連想配列に格納する
-            if ($file->getClientOriginalExtension() === 'md') {
-                $filesWithCategories[] = [
-                    'file' => $file,
-                    'category' => $categories[$index] // 対応するカテゴリーを割り当てる
-                ];
+            // ファイルの拡張子が.mdの場合のみ処理を行う
+            if ($file->getClientOriginalExtension() !== 'md') {
+                continue;
             }
-        }
-
-        // ファイルから記事を作成する
-        foreach ($filesWithCategories as $fileWithCategory) {
-            $file = $fileWithCategory['file'];
-            $category = $fileWithCategory['category'];
 
             // ファイルをアップロードする
             $file->move(storage_path('app/uploads'), $file->getClientOriginalName());
@@ -164,35 +157,25 @@ class ArticleController extends Controller
             // 文字列に変換する
             $content = implode($convertedLines);
 
-            // 画像のパスを取得する
-            $imagePaths = [];
+            // 記事を保存する
+            $new_article = new Article();
+            $new_article->title = $title;
+            $new_article->content = $content;
+            $new_article->category = $categories[$index];
+            $new_article->save();
+
+            // 画像を保存する
             foreach ($convertedLines as $line) {
                 preg_match_all('/!\[.*?\]\((.*?)\)/', $line, $matches);
                 foreach ($matches[1] as $match) {
                     $imagePaths[] = $match;
                 }
             }
-
-            // 記事を保存する
-            $new_article = new Article();
-            $new_article->title = $title;
-            $new_article->content = $content;
-            $new_article->category = $category;
-            $new_article->save();
-
-            // 画像を保存する
-            foreach ($imagePaths as $imagePath) {
-                $articleImage = new ArticleImage();
-                $articleImage->name = basename($imagePath);
-                $articleImage->path = $imagePath;
-                $articleImage->article_id = $new_article->id;
-                $articleImage->save();
-            }
             // ファイルを削除する
             unlink(storage_path('app/uploads/' . $file->getClientOriginalName()));
         }
-        $count = count($filesWithCategories);
-        return response()->json(['message' => $count . '個のファイルをアップロードしました']);
+
+        return response()->json(['message' => count($files) . '個のファイルをアップロードしました']);
     }
 
     /**
@@ -234,7 +217,7 @@ class ArticleController extends Controller
         $convertImagePath = function ($line) {
             // preg_replace_callbackは、正規表現にマッチした文字列をコールバック関数で置換する関数
             return preg_replace_callback('/!\[.*?\]\((.*?)\)/', function ($matches) {
-                $imagePath = $matches[1]; // 画像のパス(S3のパス)
+                $imagePath = $matches[1];
                 if (strpos($imagePath, '../_resources/') === 0) {
                     $fileImagePath = Storage::disk('s3')->url('images/' . basename($imagePath));
                     return '![' . basename($imagePath) . '](' . $fileImagePath . ')';
