@@ -14,16 +14,29 @@ class ArticleController extends Controller
 {
     /**
      * 記事の一覧を取得する
+     * 件数およびページ数も指定可能
      */
-    public function index()
+    public function index(Request $request)
     {
-        // 記事の一覧を取得する
-        $articles = Article::all();
+        // ページ数およびページサイズを取得
+        $page = max(1, $request->page ?? 1);
+        $pageSize = max(1, min(100, $request->pageSize ?? 10)); // ページサイズは100件まで
+        $offset = ($page - 1) * $pageSize;
+
+        // 記事の総数を取得
+        $totalArticles = Article::count();
+
+        // 記事を取得
+        $articles = Article::limit($pageSize)->offset($offset)->get();
+
         // 記事の連想配列に画像のパスを追加する
         foreach ($articles as $article) {
             $article->imagePaths = $this->getImagePaths($article->id);
         }
-        return $articles;
+        return response()->json([
+            'totalCount' => $totalArticles,
+            'articles' => $articles
+        ]);
     }
 
     /**
@@ -189,7 +202,7 @@ class ArticleController extends Controller
     public function search(Request $request)
     {
         $keyword = $request->keyword;
-        // キーワードが特定の文字列の場合、文章の検索を有効化または無効化する
+        $page = max(1, $request->page ?? 1);
         if ($keyword === env('LOCK_KEYWORD')) {
             $request->session()->put(env('SENTENCE_SESSION_KEY'), 'not_verified');
             return [];
@@ -275,16 +288,28 @@ class ArticleController extends Controller
 
     /**
      * カテゴリーに該当する記事を取得
+     * 件数も指定可能
      */
     public function getArticlesByCategory(Request $request)
     {
         $category = $request->category;
-        $articles = Article::where('category', $category)->get();
+        $page = max(1, $request->page ?? 1);
+        $pageSize = max(1, min(100, $request->pageSize ?? 10)); // ページサイズは100件まで
+        $offset = ($page - 1) * $pageSize;
+
+        // カテゴリーに該当する記事の総数を取得
+        $totalArticles = Article::where('category', $category)->count();
+
+        // カテゴリーに該当する記事を取得
+        $articles = Article::where('category', $category)->limit($pageSize)->offset($offset)->get();
         // 記事の連想配列に画像のパスを追加する
         foreach ($articles as $article) {
             $article->imagePaths = $this->getImagePaths($article->id);
         }
-        return $articles;
+        return response()->json([
+            'totalCount' => $totalArticles,
+            'articles' => $articles
+        ]);
     }
 
     /**
