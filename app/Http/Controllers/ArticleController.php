@@ -29,10 +29,6 @@ class ArticleController extends Controller
         // 記事を取得
         $articles = Article::limit($pageSize)->offset($offset)->get();
 
-        // 記事の連想配列に画像のパスを追加する
-        foreach ($articles as $article) {
-            $article->imagePaths = $this->getImagePaths($article->id);
-        }
         return response()->json([
             'totalCount' => $totalArticles,
             'articles' => $articles
@@ -60,7 +56,6 @@ class ArticleController extends Controller
         if (empty($article)) {
             return response()->json(['message' => '記事が見つかりません'], 404);
         }
-        $article->imagePaths = $this->getImagePaths($id);
         return $article;
     }
 
@@ -143,19 +138,15 @@ class ArticleController extends Controller
                 continue;
             }
 
-            // ファイルをアップロードする
-            $file->move(storage_path('app/uploads'), $file->getClientOriginalName());
-            $lines = file(storage_path('app/uploads/' . $file->getClientOriginalName()));
+            // ファイルの内容を取得する
+            $fileContent = file_get_contents($file);
 
             // ファイル名からタイトルを取得
             $filename = $file->getClientOriginalName();
             $title = str_replace('.md', '', $filename);
 
             // 各行に対して画像のパスを変換する
-            $convertedLines = $this->convertImagePath($lines);
-
-            // 文字列に変換する
-            $content = implode($convertedLines);
+            $content = $this->convertImagePath($fileContent);
 
             // 記事を保存する
             $new_article = new Article();
@@ -164,15 +155,11 @@ class ArticleController extends Controller
             $new_article->category = $categories[$index];
             $new_article->save();
 
-            // 画像を保存する
-            foreach ($convertedLines as $line) {
-                preg_match_all('/!\[.*?\]\((.*?)\)/', $line, $matches);
-                foreach ($matches[1] as $match) {
-                    $imagePaths[] = $match;
-                }
+            // 画像のパスを取得する
+            preg_match_all('/!\[.*?\]\((.*?)\)/', $content, $matches);
+            foreach ($matches[1] as $match) {
+                $imagePaths[] = $match;
             }
-            // ファイルを削除する
-            unlink(storage_path('app/uploads/' . $file->getClientOriginalName()));
         }
 
         return response()->json(['message' => count($files) . '個のファイルをアップロードしました']);
@@ -199,10 +186,6 @@ class ArticleController extends Controller
         $articles = $articles->unique('id')->slice($offset, $pageSize); // ページサイズ分の記事を取得($articlesはCollection)
         $articles = $articles->values(); // $articlesを配列に変換する
 
-        // 記事の連想配列に画像のパスを追加する
-        foreach ($articles as $article) {
-            $article->imagePaths = $this->getImagePaths($article->id);
-        }
         return response()->json([
             'totalCount' => $totalArticles,
             'articles' => $articles
@@ -210,12 +193,16 @@ class ArticleController extends Controller
     }
 
     /**
-     * S3の画像のパスを変換する
+     * もとの.mdファイルのうち、../_resources/から始まる画像のパスをS3のURLに変換する
+     * @param string $content 記事の内容
+     * @return string 変換後の記事の内容
      */
-    public function convertImagePath(array $lines)
+    public function convertImagePath(string $content)
     {
+        // 改行で文章を分割する
+        $lines = explode("\r\n", $content);
         $convertImagePath = function ($line) {
-            // preg_replace_callbackは、正規表現にマッチした文字列をコールバック関数で置換する関数
+            // 正規表現にマッチした文字列をコールバック関数で置換する
             return preg_replace_callback('/!\[.*?\]\((.*?)\)/', function ($matches) {
                 $imagePath = $matches[1];
                 if (strpos($imagePath, '../_resources/') === 0) {
@@ -225,36 +212,10 @@ class ArticleController extends Controller
                 return $matches[0]; // 画像のパスが変換対象でない場合はそのまま返す
             }, $line);
         };
+        $convertedLines = array_map($convertImagePath, $lines);
 
-        return array_map($convertImagePath, $lines);
-    }
-
-    /**
-     * 記事IDに該当する画像のパス群を取得する
-     * 該当する記事がない場合はデフォルトの画像を返す
-     */
-    public function getImagePaths(string $articleId): array
-    {
-        // デフォルトの画像のパスを取得する。デフォルトの画像のみpublicに保存されている
-        $defaultImagePath = [Storage::disk('public')->url('noimage.png')];
-
-        // デフォルトの画像にアクセスできるか確認
-        if (!Storage::disk('public')->exists('noimage.png')) {
-            return [];
-        }
-
-        // デフォルトの画像がない場合は空の配列を返す
-        if (empty($defaultImagePath)) {
-            return [];
-        }
-
-        // 記事IDに該当する画像のパス群を返す (該当する記事がない場合はデフォルトの画像を返す)
-        $images = ArticleImage::where('article_id', $articleId)->get()->pluck('path')->toArray();
-        if (count($images) > 0) {
-            return $images;
-        } else {
-            return $defaultImagePath;
-        }
+        // 文字列に変換する
+        return implode("\r\n", $convertedLines);
     }
 
     /**
@@ -288,10 +249,7 @@ class ArticleController extends Controller
 
         // カテゴリーに該当する記事を取得
         $articles = Article::where('category', $category)->limit($pageSize)->offset($offset)->get();
-        // 記事の連想配列に画像のパスを追加する
-        foreach ($articles as $article) {
-            $article->imagePaths = $this->getImagePaths($article->id);
-        }
+
         return response()->json([
             'totalCount' => $totalArticles,
             'articles' => $articles
@@ -305,10 +263,6 @@ class ArticleController extends Controller
     {
         $count = 5;
         $articles = Article::inRandomOrder()->limit($count)->get();
-        // 記事の連想配列に画像のパスを追加する
-        foreach ($articles as $article) {
-            $article->imagePaths = $this->getImagePaths($article->id);
-        }
         return $articles;
     }
 }
