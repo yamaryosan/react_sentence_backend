@@ -321,7 +321,7 @@ class ArticleController extends Controller
      */
     public function getRandom(Request $request)
     {
-        $count = 10;
+        $count = 5;
         $articles = Article::inRandomOrder()->limit($count)->get();
         // 記事の連想配列に画像のパスを追加する
         foreach ($articles as $article) {
