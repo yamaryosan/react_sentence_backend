@@ -203,24 +203,28 @@ class ArticleController extends Controller
     {
         $keyword = $request->keyword;
         $page = max(1, $request->page ?? 1);
-        if ($keyword === env('LOCK_KEYWORD')) {
-            $request->session()->put(env('SENTENCE_SESSION_KEY'), 'not_verified');
-            return [];
-        } else if ($keyword === env('UNLOCK_KEYWORD')){
-            $request->session()->put(env('SENTENCE_SESSION_KEY'), 'verified');
-            return [];
-        }
+        $pageSize = max(1, min(100, $request->pageSize ?? 10)); // ページサイズは100件まで
+        $offset = ($page - 1) * $pageSize;
 
-        // キーワードに該当する記事を取得
+        // キーワードに該当する記事の総数を取得(重複は排除)
+        $totalArticles = Article::where('title', 'like', "%$keyword%")->get();
+        $totalArticles = $totalArticles->merge(Article::where('content', 'like', "%$keyword%")->get());
+        $totalArticles = $totalArticles->unique('id')->count();
+
+        // キーワードに該当する記事を取得(合計がページサイズになるようにする)
         $articles = Article::where('title', 'like', "%$keyword%")->get();
         $articles = $articles->merge(Article::where('content', 'like', "%$keyword%")->get());
+        $articles = $articles->unique('id')->slice($offset, $pageSize); // ページサイズ分の記事を取得($articlesはCollection)
+        $articles = $articles->values(); // $articlesを配列に変換する
 
         // 記事の連想配列に画像のパスを追加する
         foreach ($articles as $article) {
             $article->imagePaths = $this->getImagePaths($article->id);
         }
-
-        return $articles;
+        return response()->json([
+            'totalCount' => $totalArticles,
+            'articles' => $articles
+        ]);
     }
 
     /**
