@@ -142,18 +142,6 @@ class SentenceController extends Controller
         $offset = ($page - 1) * $pageSize;
 
         $sentences = Sentence::where('sentence', 'like', "%$keyword%")->get();
-
-        // 検索結果からNGワードを含む文章を除外
-        $sentences = $sentences->filter(function ($sentence) {
-            $ngWords = explode(',', env('NG_WORDS'));
-            foreach ($ngWords as $ngWord) {
-                if (strpos($sentence->sentence, $ngWord) !== false) {
-                    return false;
-                }
-            }
-            return true;
-        });
-
         $totalSentences = $sentences->count();
 
         return response()->json([
