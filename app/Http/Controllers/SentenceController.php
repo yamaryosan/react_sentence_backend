@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Validator;
 class SentenceController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * 文章一覧を取得
      */
     public function index()
     {
@@ -19,7 +19,7 @@ class SentenceController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * 文章を保存
      */
     public function store(Request $request)
     {
@@ -30,7 +30,7 @@ class SentenceController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * 文章を取得
      */
     public function show(string $id)
     {
@@ -42,7 +42,7 @@ class SentenceController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * 文章を更新
      */
     public function update(Request $request, string $id)
     {
@@ -53,7 +53,7 @@ class SentenceController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * 文章を削除
      */
     public function destroy(string $id)
     {
@@ -62,6 +62,9 @@ class SentenceController extends Controller
         return $sentence;
     }
 
+    /**
+     * 文章を全て削除
+     */
     public function truncate()
     {
         Sentence::truncate();
@@ -69,8 +72,9 @@ class SentenceController extends Controller
     }
 
     /**
-     * 文章アップロード
-     * ファイル拡張子はあえてチェックしない(txtファイルなのに、application/x-dosexecと判定されるファイルがあるため)
+     * 文章をアップロード
+     * ファイル拡張子はあえてチェックしない
+     * txtファイルなのに、application/x-dosexecと判定されるファイルがあるため
      */
     public function upload(Request $request)
     {
