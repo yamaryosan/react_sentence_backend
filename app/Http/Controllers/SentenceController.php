@@ -11,15 +11,19 @@ use Illuminate\Support\Facades\Validator;
 class SentenceController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * 文章一覧を取得
      */
-    public function index()
+    public function index(Request $request)
     {
-        return Sentence::all();
+        $page = max(1, $request->page ?? 1);
+        $pageSize = max(1, min(100, $request->pageSize ?? 10));
+        $offset = ($page - 1) * $pageSize;
+
+        return Sentence::limit($pageSize)->offset($offset)->get();
     }
 
     /**
-     * Store a newly created resource in storage.
+     * 文章を保存
      */
     public function store(Request $request)
     {
@@ -30,7 +34,7 @@ class SentenceController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * 文章を取得
      */
     public function show(string $id)
     {
@@ -42,7 +46,7 @@ class SentenceController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * 文章を更新
      */
     public function update(Request $request, string $id)
     {
@@ -53,7 +57,7 @@ class SentenceController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * 文章を削除
      */
     public function destroy(string $id)
     {
@@ -62,6 +66,9 @@ class SentenceController extends Controller
         return $sentence;
     }
 
+    /**
+     * 文章を全て削除
+     */
     public function truncate()
     {
         Sentence::truncate();
@@ -69,8 +76,9 @@ class SentenceController extends Controller
     }
 
     /**
-     * 文章アップロード
-     * ファイル拡張子はあえてチェックしない(txtファイルなのに、application/x-dosexecと判定されるファイルがあるため)
+     * 文章をアップロード
+     * ファイル拡張子はあえてチェックしない
+     * txtファイルなのに、application/x-dosexecと判定されるファイルがあるため
      */
     public function upload(Request $request)
     {
@@ -101,7 +109,7 @@ class SentenceController extends Controller
     /**
      * 改行コードを処理する
      * 2つ以上の改行コードがある場合は、それを区切りとして分割する
-     * 改行コードが1つの場合は、正しく1つの文章として扱う
+     * 改行コードが1つの場合は、1つの文章として扱う
      */
     private function split(array $sentences)
     {
@@ -129,35 +137,16 @@ class SentenceController extends Controller
     public function search(Request $request)
     {
         $keyword = $request->keyword;
-        // キーワードが特定の文字列の場合、文章の検索を有効化または無効化する
-        if ($keyword === env('LOCK_KEYWORD')) {
-            $request->session()->put(env('SENTENCE_SESSION_KEY'), 'not_verified');
-            return [];
-        } else if ($keyword === env('UNLOCK_KEYWORD')) {
-            $request->session()->put(env('SENTENCE_SESSION_KEY'), 'verified');
-            return [];
-        }
+        $page = max(1, $request->page ?? 1);
+        $pageSize = max(1, min(100, $request->pageSize ?? 10)); // ページサイズは100件まで
+        $offset = ($page - 1) * $pageSize;
 
-        // NGワードが含まれている場合は、検索しない
-        $ngWords = explode(',', env('NG_WORDS'));
-        if (in_array($keyword, $ngWords)) {
-            return [];
-        }
-
-        // 認証いかんにかかわらず、記事を検索する
         $sentences = Sentence::where('sentence', 'like', "%$keyword%")->get();
+        $totalSentences = $sentences->count();
 
-        // 検索結果からNGワードを含む文章を除外
-        $sentences = $sentences->filter(function ($sentence) {
-            $ngWords = explode(',', env('NG_WORDS'));
-            foreach ($ngWords as $ngWord) {
-                if (strpos($sentence->sentence, $ngWord) !== false) {
-                    return false;
-                }
-            }
-            return true;
-        });
-
-        return $sentences->values()->all();
+        return response()->json([
+            'totalCount' => $totalSentences,
+            'sentences' => $sentences->slice($offset, $pageSize)->values()
+        ]);
     }
 }
