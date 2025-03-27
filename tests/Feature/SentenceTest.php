@@ -56,7 +56,7 @@ class SentenceTest extends TestCase
 
         $response->assertStatus(404);
         $response->assertJson([
-            'message' => '文章が見つかりません'
+            'message' => 'Sentence not found'
         ]);
     }
 
