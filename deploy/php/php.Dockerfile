@@ -33,6 +33,13 @@ RUN php artisan storage:link
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/storage/app/public /var/www/html/public
 RUN chmod -R 755 /var/www/html/storage /var/www/html/storage/app/public /var/www/html/public
 
+# Supervisorをインストール
+RUN apt-get install -y supervisor
+# Supervisorの設定ファイルをコピー
+COPY ./deploy/php/supervisor.conf /etc/supervisor/conf.d/supervisor.conf
+# Supervisorログディレクトリを作成
+RUN mkdir -p /var/log/supervisor
+
 # エントリーポイントスクリプトをコピー
 COPY ./deploy/php/entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
@@ -40,4 +47,6 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 EXPOSE 80
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=80", "--env=.env"]
+
+# Supervisorを起動
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisor.conf"]
