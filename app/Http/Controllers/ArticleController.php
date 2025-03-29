@@ -5,10 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-use Illuminate\Support\Facades\Storage;
-
 use App\Models\Article;
-use App\Models\ArticleImage;
+use App\Jobs\UploadArticlesJob;
 
 class ArticleController extends Controller
 {
@@ -129,38 +127,30 @@ class ArticleController extends Controller
             return response()->json(['error' => 'カテゴリが選択されていません'], 400);
         }
 
-        // 画像のパスを保存する
-        $imagePaths = [];
-        // ファイルを1つずつ処理する
-        foreach ($files as $index => $file) {
-            // ファイルの拡張子が.mdの場合のみ処理を行う
-            if ($file->getClientOriginalExtension() !== 'md') {
-                continue;
-            }
-
-            // ファイルの内容を取得する
-            $fileContent = file_get_contents($file);
-
-            // ファイル名からタイトルを取得
-            $filename = $file->getClientOriginalName();
-            $title = str_replace('.md', '', $filename);
-
-            // 各行に対して画像のパスを変換する
-            $content = $this->convertImagePath($fileContent);
-
-            // 記事を保存する
-            $new_article = new Article();
-            $new_article->title = $title;
-            $new_article->content = $content;
-            $new_article->category = $categories[$index];
-            $new_article->save();
-
-            // 画像のパスを取得する
-            preg_match_all('/!\[.*?\]\((.*?)\)/', $content, $matches);
-            foreach ($matches[1] as $match) {
-                $imagePaths[] = $match;
-            }
+        // ファイル群を一時保存
+        $tempDir = storage_path('app/temp');
+        //以前のapp/temp内のファイルを削除
+        $previousFiles = glob($tempDir . '/*');
+        foreach ($previousFiles as $previousFile) {
+            unlink($previousFile);
         }
+        // app/tempのディレクトリを削除
+        if (is_dir($tempDir)) {
+            rmdir($tempDir);
+        }
+
+        // app/tempのディレクトリを作成
+        mkdir($tempDir);
+
+        // ファイルを一時保存
+        foreach ($files as $index => $file) {
+            $originalName = $file->getClientOriginalName();
+            $newName = sprintf('%06d', $index) . '_' . $originalName;
+            $file->move($tempDir, $newName);
+        }
+
+        // ファイル群をキューで処理
+        UploadArticlesJob::dispatch($tempDir, $categories);
 
         return response()->json(['message' => count($files) . '個のファイルをアップロードしました']);
     }
@@ -190,32 +180,6 @@ class ArticleController extends Controller
             'totalCount' => $totalArticles,
             'articles' => $articles
         ]);
-    }
-
-    /**
-     * もとの.mdファイルのうち、../_resources/から始まる画像のパスをS3のURLに変換する
-     * @param string $content 記事の内容
-     * @return string 変換後の記事の内容
-     */
-    public function convertImagePath(string $content)
-    {
-        // 改行で文章を分割する
-        $lines = explode("\r\n", $content);
-        $convertImagePath = function ($line) {
-            // 正規表現にマッチした文字列をコールバック関数で置換する
-            return preg_replace_callback('/!\[.*?\]\((.*?)\)/', function ($matches) {
-                $imagePath = $matches[1];
-                if (strpos($imagePath, '../_resources/') === 0) {
-                    $fileImagePath = Storage::disk('s3')->url('images/' . basename($imagePath));
-                    return '![' . basename($imagePath) . '](' . $fileImagePath . ')';
-                }
-                return $matches[0]; // 画像のパスが変換対象でない場合はそのまま返す
-            }, $line);
-        };
-        $convertedLines = array_map($convertImagePath, $lines);
-
-        // 文字列に変換する
-        return implode("\r\n", $convertedLines);
     }
 
     /**

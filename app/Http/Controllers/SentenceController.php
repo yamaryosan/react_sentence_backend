@@ -8,6 +8,10 @@ use App\Models\Sentence;
 
 use Illuminate\Support\Facades\Validator;
 
+use App\Jobs\UploadSentencesJob;
+use App\Jobs\TestJob;
+use Throwable;
+
 class SentenceController extends Controller
 {
     /**
@@ -40,7 +44,7 @@ class SentenceController extends Controller
     {
         $sentence = Sentence::find($id);
         if ($sentence === null) {
-            return response()->json(['message' => '文章が見つかりません'], 404);
+            return response()->json(['message' => 'Sentence not found'], 404);
         }
         return $sentence;
     }
@@ -77,58 +81,35 @@ class SentenceController extends Controller
 
     /**
      * 文章をアップロード
-     * ファイル拡張子はあえてチェックしない
+     * ファイル拡張子はチェックしない
      * txtファイルなのに、application/x-dosexecと判定されるファイルがあるため
      */
     public function upload(Request $request)
     {
         // ファイルアップロードのバリデーション
         $validator = Validator::make($request->all(), [
-            'file' => 'required|max:20480'
+            'file' => 'required|max:40960'
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 400);
+            return response()->json(['error' => $validator->errors()], 422);
         }
 
+        // ファイルを保存
         $file = $request->file('file');
         $file->move(storage_path('app/uploads'), $file->getClientOriginalName());
 
-        $sentences = file(storage_path('app/uploads/' . $file->getClientOriginalName()));
-        $sentences = $this->split($sentences);
+        \Log::info('File moved to: ' . storage_path('app/uploads/' . $file->getClientOriginalName()));
 
-        foreach ($sentences as $sentence) {
-            $sentence_model = new Sentence;
-            $sentence_model->sentence = $sentence;
-            $sentence_model->save();
+
+        // 内容DB保存は非同期で処理する
+        try {
+            UploadSentencesJob::dispatch($file->getClientOriginalName());
+        } catch (Throwable $e) {
+            \Log::error('Failed to dispatch UploadSentencesJob: ' . $e->getMessage());
         }
 
-        return Sentence::all();
-    }
-
-    /**
-     * 改行コードを処理する
-     * 2つ以上の改行コードがある場合は、それを区切りとして分割する
-     * 改行コードが1つの場合は、1つの文章として扱う
-     */
-    private function split(array $sentences)
-    {
-        $result = [];
-        $sentence = '';
-        foreach ($sentences as $line) {
-            if (trim($line) === '') {
-                if ($sentence !== '') {
-                    $result[] = $sentence;
-                    $sentence = '';
-                }
-            } else {
-                $sentence .= $line;
-            }
-        }
-        if ($sentence !== '') {
-            $result[] = $sentence;
-        }
-        return $result;
+        return ['message' => 'Uploading sentences...'];
     }
 
     /**
