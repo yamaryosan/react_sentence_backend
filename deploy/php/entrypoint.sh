@@ -30,5 +30,8 @@ echo "Migrations executed"
 echo "Current environment variables:"
 cat .env
 
+# supervisorの起動
+supervisord -c /etc/supervisor/conf.d/supervisor.conf
+
 # コンテナのエントリーポイントとしてコマンドを実行
 exec "$@"
