@@ -34,4 +34,4 @@ cat .env
 supervisord -c /etc/supervisor/conf.d/supervisor.conf
 
 # コンテナのエントリーポイントとしてコマンドを実行
-exec "$@"
+# exec "$@"
