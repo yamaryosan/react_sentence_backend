@@ -11,6 +11,7 @@ RUN apt-get update \
     libxml2-dev \
     libpq-dev \
     postgresql-client \
+    procps \
     && apt-get clean
 
 # php.iniをコピー
@@ -39,6 +40,7 @@ RUN apt-get install -y supervisor
 COPY ./deploy/php/supervisor.conf /etc/supervisor/conf.d/supervisor.conf
 # Supervisorログディレクトリを作成
 RUN mkdir -p /var/log/supervisor
+RUN mkdir -p /var/run/supervisor
 
 # エントリーポイントスクリプトをコピー
 COPY ./deploy/php/entrypoint.sh /usr/local/bin/
