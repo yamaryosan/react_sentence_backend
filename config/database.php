@@ -91,7 +91,6 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
-            # 'sslcert' => env('PGSSLCERT', '/tmp/postgres.crt'),
         ],
 
         'sqlsrv' => [
