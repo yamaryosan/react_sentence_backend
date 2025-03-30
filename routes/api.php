@@ -6,9 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\SentenceController;
 use App\Http\Controllers\ArticleController;
-use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ArticleImageController;
-use App\Http\Controllers\ContactController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
