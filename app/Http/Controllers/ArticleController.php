@@ -10,6 +10,8 @@ use App\Jobs\UploadArticlesJob;
 
 class ArticleController extends Controller
 {
+    private $maxPageSize = 500;
+    private $defaultPageSize = 50;
     /**
      * 記事の一覧を取得する
      * 件数およびページ数も指定可能
@@ -18,7 +20,7 @@ class ArticleController extends Controller
     {
         // ページ数およびページサイズを取得
         $page = max(1, $request->page ?? 1);
-        $pageSize = max(1, min(100, $request->pageSize ?? 10)); // ページサイズは100件まで
+        $pageSize = max(1, min($this->maxPageSize, $request->pageSize ?? $this->defaultPageSize));
         $offset = ($page - 1) * $pageSize;
 
         // 記事の総数を取得
@@ -205,7 +207,7 @@ class ArticleController extends Controller
     {
         $category = $request->category;
         $page = max(1, $request->page ?? 1);
-        $pageSize = max(1, min(100, $request->pageSize ?? 10)); // ページサイズは100件まで
+        $pageSize = max(1, min($this->maxPageSize, $request->pageSize ?? $this->defaultPageSize));
         $offset = ($page - 1) * $pageSize;
 
         // カテゴリーに該当する記事の総数を取得
