@@ -9,18 +9,20 @@ use App\Models\Sentence;
 use Illuminate\Support\Facades\Validator;
 
 use App\Jobs\UploadSentencesJob;
-use App\Jobs\TestJob;
+# use App\Jobs\TestJob;
 use Throwable;
 
 class SentenceController extends Controller
 {
+    private $maxPageSize = 500;
+    private $defaultPageSize = 50;
     /**
      * 文章一覧を取得
      */
     public function index(Request $request)
     {
         $page = max(1, $request->page ?? 1);
-        $pageSize = max(1, min(100, $request->pageSize ?? 10));
+        $pageSize = max(1, min($this->maxPageSize, $request->pageSize ?? $this->defaultPageSize));
         $offset = ($page - 1) * $pageSize;
 
         return Sentence::limit($pageSize)->offset($offset)->get();
@@ -119,7 +121,7 @@ class SentenceController extends Controller
     {
         $keyword = $request->keyword;
         $page = max(1, $request->page ?? 1);
-        $pageSize = max(1, min(100, $request->pageSize ?? 10)); // ページサイズは100件まで
+        $pageSize = max(1, min($this->maxPageSize, $request->pageSize ?? $this->defaultPageSize));
         $offset = ($page - 1) * $pageSize;
 
         $sentences = Sentence::where('sentence', 'like', "%$keyword%")->get();
