@@ -185,7 +185,7 @@ class ArticleController extends Controller
     }
 
     /**
-     * 記事のカテゴリーを取得
+     * 記事のカテゴリーとその記事の数を取得
      */
     public function getCategories()
     {
@@ -196,7 +196,15 @@ class ArticleController extends Controller
             $categories[] = $category->category;
         }
 
-        return $categories;
+        $categoriesWithCount = [];
+        foreach ($categories as $category) {
+            $categoriesWithCount[] = [
+                'category' => $category,
+                'count' => Article::where('category', $category)->count()
+            ];
+        }
+
+        return $categoriesWithCount;
     }
 
     /**
