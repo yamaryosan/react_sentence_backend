@@ -82,6 +82,19 @@ class ArticleController extends Controller
     }
 
     /**
+     * 記事をカテゴリーごとに削除する
+     */
+    public function deleteByCategory(Request $request)
+    {
+        if (empty($request->categories)) {
+            return response()->json(['message' => 'カテゴリーが選択されていません'], 400);
+        }
+        $categories = $request->categories;
+        Article::whereIn('category', $categories)->delete();
+        return response()->json(['message' => '記事を削除しました']);
+    }
+
+    /**
      * 記事を全削除する
      */
     public function truncate()
